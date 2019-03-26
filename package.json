@@ -1,0 +1,27 @@
+{
+  "name": "voxeljs-next",
+  "version": "1.0.0",
+  "description": "The next generation of Voxel JS.",
+  "main": "ChunkManager.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshmarinacci/voxeljs-next.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joshmarinacci/voxeljs-next/issues"
+  },
+  "homepage": "https://github.com/joshmarinacci/voxeljs-next#readme",
+  "dependencies": {
+    "atlaspack": "^1.0.0",
+    "pubnub": "^4.23.0",
+    "three": "^0.102.1",
+    "threejs-2d-components": "0.0.4",
+    "webrtc-sdk": "^2.2.5",
+    "webxr-boilerplate": "^0.2.1-b"
+  }
+}
