@@ -41,14 +41,14 @@
         <button id="save">save</button>
         <button id="reload">reload</button>
     </div>
-    <div class="button-bar">
-        <button id="use-greedy-mesher" class="selected mesher">greedy mesher</button>
-        <button id="use-culled-mesher" class="mesher">culled mesher</button>
-        <button id="toggle-texture" class="selected">textures</button>
-        <button id="toggle-ao" class="selected">shadows</button>
-        <button id="connect-voice">voice</button>
-        <button id="share">shared playing</button>
-    </div>
+<!--    <div class="button-bar">-->
+<!--        <button id="use-greedy-mesher" class="selected mesher">greedy mesher</button>-->
+<!--        <button id="use-culled-mesher" class="mesher">culled mesher</button>-->
+<!--        <button id="toggle-texture" class="selected">textures</button>-->
+<!--        <button id="toggle-ao" class="selected">shadows</button>-->
+<!--        <button id="connect-voice">voice</button>-->
+<!--        <button id="share">shared playing</button>-->
+<!--    </div>-->
 </div>
 <div id="container">
     <div id="touch-overlay">
@@ -89,7 +89,7 @@
     import {SimpleMeshCollider} from "../src/SimpleMeshCollider.js"
     import {ChunkManager} from "../src/ChunkManager.js"
     import {GreedyMesher} from "../src/GreedyMesher.js"
-    import {CulledMesher} from "../src/CulledMesher.js"
+    // import {CulledMesher} from "../src/CulledMesher.js"
     import {BlockPicker} from './js/BlockPicker.js'
     import {VRControls} from "../src/VRControls.js"
     import {DesktopControls} from '../src/DesktopControls.js'
@@ -98,30 +98,10 @@
     import {TouchControls} from '../src/TouchControls.js'
     import {generateChunkInfoFromFunction, toRad} from '../src/utils.js'
     import {VoxelMesh} from "../src/VoxelMesh.js"
-    /*
-    // converter function from chunks to meshs
-
-    // managers chunks
-    //converts chunks to three mesh
-    import {PersistenceManager} from './js/PersistenceManager.js'
-    //manages loading textures and the custom shader
-
-
-
-    import {PigComp} from './js/PigComp.js'
-    import {PubnubNetworkplay} from './js/PubnubNetworkplay.js'
-    import {ItemManager} from './js/ItemManager.js'
-    import {SmashParticles} from './js/SmashParticles.js'
-    import {ExplosionParticles} from './js/ExplosionParticles.js'
-    import VRStats from "../src/VRStats.js"
-    */
 
     //JQuery-like selectors
     const $ = (sel) => document.querySelector(sel)
-    const $$ = (sel) => document.querySelectorAll(sel)
     const on = (elem, type, cb) => elem.addEventListener(type,cb)
-    //return random number between min and max
-    const rand = (min,max) => Math.random()*(max-min) + min
 
 
     const app = new WebXRBoilerPlate({
@@ -138,96 +118,35 @@
 
         app.active = true
 
-        //load a cat texture
-        app.textureLoader = new TextureLoader()
-        const texture = app.textureLoader.load('./cat.jpg')
-
-        app.textureManager = new TextureManager()
+        //force the ThreeJS loading framework to have at least one thing in the que
+        new TextureLoader().load('./dummy.jpg')
 
 
         app.player = new Mesh()
         app.player.position.y = 30
+        //physics for the player
         app.player_phys = new PhysHandler(app, app.player,[new SimpleMeshCollider(app)])
         app.comps.push(app.player_phys)
         app.player_phys.enable()
 
-        const onload = app.textureManager.load(['grass','brick','dirt','anim','tnt','arrows']).then(()=>{
+        app.textureManager = new TextureManager()
+        app.comps.push(app.textureManager)
+        //start loading these textures
+        app.textureManager.load(['grass','brick','dirt','anim','tnt','arrows']).then(()=>{
             app.textureManager.markAsAnimated('anim')
             app.rebuildAllMeshes()
+            app.chunkManager.requestMissingChunks(new Vector3(0,0,0))
+            app.dialog.setSelectedToDefault()
         })
-        app.comps.push(app.textureManager)
 
-        const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
+
+        // function to generate a flat world
         const flat = (i,j,k) => {
-            // if((i+2)%4 === 0 && k%4 === 0 && j < 3 && j > -3) return 3
-            if(j>0 && j <3 && i>-5 && i<5) {
-                if(k< -2 && k >-5) return 4
-                if(k > 2 && k < 5) return 4
-                if(k > 5 && k < 8) return 4
-            }
-
-            if(i===5 && j===1 && k===-2) return 5
-            if(i===10 && j===1 && k===-2) return 5
-
-            /*
-            if(j === 0) {
-                if(i === -8) return 2
-                if(i === +8) return 2
-                if(k === -18) return 2
-                if(k === -8) return 2
-            }*/
+            //an gap in the floor made of air
             if(j <1 && k < -5 && k > -10 ) return 0
-            if(j < 1 && j > -10) {
-                return 2
-            }
-            return 0
-        }
-
-        const single = (i,j,k) => {
-            // if((i >= 3 && i<=5 ) && (j >= -3 && j <=-2) && (k >= -7 && k<=-4)) return 2
-            // if(i >= -3 && i <=3 && j === -1 && k === -7) return 2;
-            // if(i === 3 && j<5 && j>=-1 && k === -7 ) return 2;
-            // if(i >=  1 && i <=3  && j === 2 && k===-4) return 2
-            if(i === 2 && j === -1 && (k<=-5 && k>=-5)) return 3
-            // if(i >=  1 && i <=3  && j >= -2 && j<=0 && k===-6 ) {
-            // if(i===2 && j===1) return 0
-            // return 2
-            // }
-            // if(i >=  0 && i <=4  && j >= -1 && j<=3 && k===-7) {
-            //     return 2
-            // }
-
-            // if(i === 2 && j === 1 && k===-5) return 2
-            // if(i === 3 && j === 1 && k===-4) return 2
-            return 0
-        }
-
-        const center = (i,j,k) => {
-            // if(i===2 && j===4 && k===2) return 2
-            if(i>=0 && i<=5 && j===0 && k===0) return 5
-            // if(i===3 && j===5 && k===1) return 2
-            // if(i===+16 && j===1 && k===0) return 3
-            return 0
-        }
-
-        const gradient = (i,j,k) => {
-            if(i>=-5 && i<5 && j===0 && k === -5) return i
-            return 0
-        }
-
-        const pyramid = (i,j,k) => {
-            const ox = -4
-            const oy = 4
-            const oz = 0
-            const w = 7
-            const d = 7
-            const h = 4
-            for(let r = 0; r<h; r++) {
-                if(i>=ox+r && i<ox+w-r && j===oy+r && k>=oz+r && k<oz+d-r) return 5
-            }
-            for(let r = 0; r<h; r++) {
-                if(i>=ox+r && i<ox+w-r && j===oy-r && k>=oz+r && k<oz+d-r) return 5
-            }
+            //the floor is brick, from depth 0 to -10
+            if(j < 1 && j > -10) return 2
+            //nothing else in the world
             return 0
         }
 
@@ -244,9 +163,6 @@
             },
         });
 
-
-        // const greedyMesher = new GreedyMesher()
-        // const culledMesher = new CulledMesher()
 
         //set the mesher to use
         app.mesher = new GreedyMesher()
@@ -265,11 +181,22 @@
             chunk.surfaceMesh.position.copy(pos.multiplyScalar(app.CHUNK_SIZE))
         }
 
-
         // rebuild all chunks in the cache
         app.rebuildAllMeshes = () => {
             Object.keys(app.chunkManager.chunks).forEach(key => app.rebuildMesh(app.chunkManager.chunks[key]))
         }
+
+        //if a chunk is missing, rebuild the mesh
+        app.chunkManager.on('missingChunk',(chunkId)=>{
+            app.rebuildMesh(app.chunkManager.generateChunk(new Vector3(chunkId[0],chunkId[1],chunkId[2])))
+        })
+
+        // when chunk removed, remove the mesh and data
+        app.chunkManager.on('removingChunk',(chunk) => {
+            group.remove(chunk.surfaceMesh)
+            chunk.surfaceMesh.geometry.dispose()
+            app.CHUNK_CACHE[chunk.id] = chunk.data
+        })
 
         // create a block with the currently selected block type
         app.createBlock = (pos) => {
@@ -277,17 +204,11 @@
             app.setBlock(pos, app.textureManager.getBlockTypeForName(app.dialog.selectedColor))
         }
 
-        // remove a block at the positon
+        // remove a block at the position
         app.removeBlock = (pos) => {
             if(app.dialog.panel.visible) return
             pos.floor()
-            // const old_block = app.chunkManager.voxelAtCoordinates(pos)
-            // if(app.active && app.itemManager.isBlockTypeItem(old_block)) {
-            //     app.itemManager.removeItem(pos)
-            // } else {
             app.setBlock(pos, 0)
-            // app.smashParticles.fire(pos)
-            // }
         }
 
         // actually set the block
@@ -295,7 +216,6 @@
             pos.floor()
             //set the actual value
             this.chunkManager.setVoxelAtCoordinates(pos, value)
-            // app.networkPlay.playerSetVoxel(pos,value)
 
             // update the chunk
             const chunkIndex = this.chunkManager.chunkIndexAtCoordinates(pos.x,pos.y,pos.z)
@@ -327,20 +247,6 @@
 
         // ======== EVENT HANDLERS ==========
 
-        on($('#use-culled-mesher'),'click',()=>{
-            $$(".mesher").forEach(el=>el.classList.remove('selected'))
-            $("#use-culled-mesher").classList.add('selected')
-            app.mesher = culledMesher
-            rebuildAllMeshes()
-        })
-        on($('#use-greedy-mesher'),'click',()=>{
-            $$(".mesher").forEach(el=>el.classList.remove('selected'))
-            $("#use-greedy-mesher").classList.add('selected')
-            app.mesher = greedyMesher
-            rebuildAllMeshes()
-        })
-
-
         // ========= crosshairs for full screen mode =========
         // TODO: move this into full screen mode
         const crosshairs_geometry = new PlaneGeometry(0.1,0.01)
@@ -351,12 +257,17 @@
         crosshairs.visible = false
 
 
+        //check every frame if the player has moved.
+        // if so add and remove any needed chunks
         let lastPos = new Vector3(0,0,0)
-        function updateChunks() {
-            if(!lastPos.equals(app.stagePos.position)) {
+        app.updateChunks = function() {
+            //if the player has moved
+            if(!lastPos.equals(this.stagePos.position)) {
+                //request missing chunks
                 const startTime = Date.now()
                 const pos = app.stagePos.position.clone().multiplyScalar(-1)
                 app.chunkManager.requestMissingChunks(pos)
+                // and remove the chunks that might be out of range now
                 app.chunkManager.removeFarChunks(pos, group)
                 const endTime = Date.now()
                 const diff = endTime - startTime
@@ -367,9 +278,8 @@
 
 
         /// ============= Highlight Object ==========
-        const highlight_geo = new CubeGeometry(1.1,1.1,1.1, 4,4)
-        highlight_geo.translate(0.5,0.5,0.5)
-        app.highlight_cube = new Mesh(highlight_geo,
+        app.highlight_cube = new Mesh(
+            new CubeGeometry(1.1,1.1,1.1, 4,4).translate(0.5,0.5,0.5),
             new MeshLambertMaterial({color:'green',
                 depthTest:true,
                 wireframe:true,
@@ -379,7 +289,11 @@
             }))
         app.highlight_cube.position.set(-2,0,-5)
         app.stagePos.add(app.highlight_cube)
-
+        app.moveHighlight = (res) => {
+            if(app.dialog.panel.visible) return
+            const pos = res.hitPosition
+            app.highlight_cube.position.copy(pos)
+        }
 
         //a standard directional light from above
         const light = new DirectionalLight( 0xffffff, 1.0 );
@@ -412,16 +326,6 @@
         }
 
 
-
-        app.moveHighlight = (res) => {
-            if(app.dialog.panel.visible) return
-            const pos = res.hitPosition
-            app.highlight_cube.position.copy(pos)
-            // vrstats.setProperty('pos',`${pos.x} ${pos.y} ${pos.z}`)
-            // vrstats.setProperty('block',`${res.hitBlock}`)
-        }
-
-
         // ========= Setup VR Controls
         app.vrControls = new VRControls(app)
         app.comps.push(app.vrControls)
@@ -447,13 +351,15 @@
 
         // =========== setup the desktop controls ===========
         app.desktopControls = new DesktopControls(app)
+        app.comps.push(app.desktopControls)
         on(app.desktopControls,'highlight',app.moveHighlight)
         on(app.desktopControls,'setblock',app.createBlock)
         on(app.desktopControls,'removeblock',app.removeBlock)
-        app.comps.push(app.desktopControls)
+        app.desktopControls.enable()
 
         // ================ setup the full screen controls
         app.fullscreenControls = new FullScreenControls(app)
+        app.comps.push(app.fullscreenControls)
         on(app.fullscreenControls,'highlight', app.moveHighlight)
         on(app.fullscreenControls,'setblock', app.createBlock)
         on(app.fullscreenControls,'removeblock',app.removeBlock)
@@ -463,65 +369,37 @@
             app.fullscreenControls.disable()
             app.desktopControls.enable()
         })
-        app.comps.push(app.fullscreenControls)
 
         // ============= setup the keyboard controls =========
         app.keyboardControls = new KeyboardControls(app)
+        app.comps.push(app.keyboardControls)
         on(app.keyboardControls, 'show-dialog',app.toggleDialog)
         app.keyboardControls.enable()
-        app.comps.push(app.keyboardControls)
 
         // ============ setup the touch controls =============
         app.touchControls = new TouchControls(app)
+        app.comps.push(app.touchControls)
         on(app.touchControls,'highlight',app.moveHighlight)
         on(app.touchControls,'setblock', app.createBlock)
         on(app.touchControls,'removeblock',app.removeBlock)
-        app.comps.push(app.touchControls)
-
-
-
-        app.chunkManager.on('missingChunk',(chunkId)=>{
-            app.rebuildMesh(app.chunkManager.generateChunk(new Vector3(chunkId[0],chunkId[1],chunkId[2])))
-        })
-        app.chunkManager.on('removingChunk',(chunk) => {
-            group.remove(chunk.surfaceMesh)
-            chunk.surfaceMesh.geometry.dispose()
-            app.CHUNK_CACHE[chunk.id] = chunk.data
-        })
-        onload.then(()=>{
-            app.chunkManager.requestMissingChunks(new Vector3(0,0,0))
-            app.dialog.setSelectedToDefault()
+        app.touchControls.enable()
+        on($("#menu-button"),'click',()=> app.toggleDialog())
+        on($("#jump-button"),'mousedown',()=>  app.player_phys.startJump())
+        on($("#jump-button"),'mouseup',()=> app.player_phys.endJump())
+        on($('#exit-fullscreen'),'click',()=>{
+            $("#touch-overlay").style.visibility = 'hidden'
+            $("body").classList.remove('fullscreen')
+            app.resizeOnNextRepaint = true
         })
 
-
-
-        // const pig = new PigComp(app)
-        // pig.enable()
-        // comps.push(pig)
-
-        // const vrstats = new VRStats(app)
-        // vrstats.cmesh.position.y = 3
-        // vrstats.enable()
-        // comps.push(vrstats)
-
-
-        /*
-        app.smashParticles = new SmashParticles(app)
-        comps.push(app.smashParticles)
-        app.explosionParticles = new ExplosionParticles(app)
-        comps.push(app.explosionParticles)
-        */
 
         // things to do on every render tick
         // this is the render loop
         let last = 0
         app.onRender((time, app)=> {
-            // materials.tick(time)
             const dt = time-last
-            // console.log('dt',dt)
             last = time
-            updateChunks()
-            // if(app.player_phys) app.player_phys.update(dt)
+            app.updateChunks()
             app.comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time,dt)
             })
@@ -530,10 +408,7 @@
         //update progress indicator while loading
         on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
 
-        app.desktopControls.enable()
-        app.touchControls.enable()
-
-        //when all assets are loaded
+        //when all assets are loaded, hide progbar
         on(app,'loaded',()=>{
             // hide the loading progress bar
             $("#progress").style.display = 'none'
@@ -553,20 +428,6 @@
                     app.resizeOnNextRepaint = true
                 }
             })
-            on($('#exit-fullscreen'),'click',()=>{
-                $("#touch-overlay").style.visibility = 'hidden'
-                $("body").classList.remove('fullscreen')
-                app.resizeOnNextRepaint = true
-            })
-            on($("#menu-button"),'click',()=>{
-                app.toggleDialog()
-            })
-            on($("#jump-button"),'mousedown',()=>{
-                app.player_phys.startJump()
-            })
-            on($("#jump-button"),'mouseup',()=>{
-                app.player_phys.endJump()
-            })
         })
         //when VR support is detected
         on(app,'detected',()=>{
@@ -578,42 +439,6 @@
                 app.enterVR()
             })
         })
-
-        /*
-        on($("#save"),'click',() => new PersistenceManager()
-            .save(chunkManager,CHUNK_CACHE)
-            .then(resp => new PersistenceManager().load(chunkManager))
-            .then(() => rebuildAllMeshes())
-        )
-        on($("#reload"),'click',()=>{
-            return new PersistenceManager()
-                .load(chunkManager)
-                .then(() => rebuildAllMeshes())
-        })
-         */
-
-        // const texture_button = $("#toggle-texture")
-        // on(texture_button,'click',()=>{
-        //     app.textureManager.texturesEnabled = !app.textureManager.texturesEnabled
-        //     if(app.textureManager.texturesEnabled) {
-        //         texture_button.classList.add('selected')
-        //     } else {
-        //         texture_button.classList.remove('selected')
-        //     }
-        // })
-
-        // const AO_button = $("#toggle-ao")
-        // on(AO_button,'click',()=>{
-        //     app.aoEnabled = !app.aoEnabled
-        //     if(app.aoEnabled) {
-        //         AO_button.classList.add('selected')
-        //     } else {
-        //         AO_button.classList.remove('selected')
-        //     }
-        //     rebuildAllMeshes()
-        // })
-
-        // app.itemManager = new ItemManager(app)
 
     })
         .catch(e => console.log(e))
