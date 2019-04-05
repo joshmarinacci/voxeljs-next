@@ -1,4 +1,4 @@
-import {Quaternion, Ray, Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
+import {Quaternion, Ray, Vector2, Vector3,} from "../node_modules/three/build/three.module.js"
 import {traceRay} from './raycast.js'
 
 export function toHexColor(num) {

@@ -1,5 +1,5 @@
-import {Vector3,} from "./node_modules/three/build/three.module.js"
-import {ECSComp} from './ECSComp.js'
+import {Vector3,} from "three"
+import {ECSComp} from '../../src/ECSComp.js'
 
 export class ItemManager extends ECSComp {
     constructor(app) {

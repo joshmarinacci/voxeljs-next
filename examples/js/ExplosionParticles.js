@@ -1,7 +1,7 @@
-import {Vector3, Color, AdditiveBlending} from "./node_modules/three/build/three.module.js"
-import {ECSComp} from './ECSComp.js'
+import {Vector3, Color, AdditiveBlending} from "three"
+import {ECSComp} from '../../src/ECSComp.js'
 import {GPUParticleSystem} from './GPUParticleSystem.js'
-import {rand} from "./utils.js"
+import {rand} from "../../src/utils.js"
 
 export class ExplosionParticles extends ECSComp {
     constructor(app) {

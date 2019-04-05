@@ -1,8 +1,8 @@
-import {Vector3, Mesh, MeshLambertMaterial, BoxBufferGeometry, Box3} from "./node_modules/three/build/three.module.js"
-import {ECSComp} from "./ECSComp.js"
-import {traceRay} from './raycast.js'
-import {PhysHandler} from './PhysHandler.js'
-import {checkHitTileY, checkHitTileX, checkHitTileZ} from "./SimpleMeshCollider.js"
+import {Vector3, Mesh, MeshLambertMaterial, BoxBufferGeometry, Box3} from "three"
+import {ECSComp} from "../../src/ECSComp.js"
+import {traceRay} from '../../src/raycast.js'
+import {PhysHandler} from '../../src/PhysHandler.js'
+import {checkHitTileY, checkHitTileX, checkHitTileZ} from "../../src/SimpleMeshCollider.js"
 
 export class PigComp extends ECSComp {
     constructor(app) {

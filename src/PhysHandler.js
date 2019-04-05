@@ -1,4 +1,4 @@
-import {Vector3,} from "./node_modules/three/build/three.module.js"
+import {Vector3,} from "../node_modules/three/build/three.module.js"
 import {ECSComp} from './ECSComp.js'
 const GRAVITY = new Vector3(0,-9.8,0)
 
@@ -34,9 +34,9 @@ export class PhysHandler extends ECSComp {
     markChanged() {
         this._fire('move',{position:this.target.position})
     }
-    update(time) {
-        // console.log('starting',this.vel.y)
-        const dt = (time/1000)
+    update(time,dt) {
+        dt = dt/1000
+        // const dt = (time/1000)
         // console.log("tick",dt)
         if(!this.flying && this.app.active) {
             let acc = GRAVITY.y * 0.5

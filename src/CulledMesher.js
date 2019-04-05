@@ -1,4 +1,4 @@
-export default class CulledMesher {
+export class CulledMesher {
     constructor()
     {
 

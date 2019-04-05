@@ -1,17 +1,10 @@
 import {
-    Color,
-    DoubleSide,
-    FaceColors,
     LinearMipMapLinearFilter,
-    MeshBasicMaterial,
-    MeshLambertMaterial,
     NearestFilter,
-    MeshFaceMaterial,
-    Texture,
     ShaderMaterial,
-    Vector2,
-    VertexColors,
-} from "./node_modules/three/build/three.module.js"
+    Texture,
+    VertexColors
+} from "../node_modules/three/build/three.module.js"
 
 const createAtlas = window.atlaspack
 

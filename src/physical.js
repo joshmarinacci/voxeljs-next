@@ -1,6 +1,6 @@
 // module.exports = physical
 import {AABB as aabb} from "./aabb.js"
-import {Vector3} from "./node_modules/three/build/three.module.js"
+import {Vector3} from "three"
 
 // make these *once*, so we're not generating
 // garbage for every object in the game.

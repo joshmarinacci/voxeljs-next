@@ -1,4 +1,4 @@
-import {Vector2, Vector3,} from "./node_modules/three/build/three.module.js"
+import {Vector2, Vector3,} from "../node_modules/three/build/three.module.js"
 import {ECSComp} from './ECSComp.js'
 import {$, DIRS, on, toRad, traceRayAtScreenCoords} from './utils.js'
 

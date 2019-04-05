@@ -1,4 +1,4 @@
-import {Vector3, Mesh, MeshLambertMaterial, BoxBufferGeometry, Box3} from "./node_modules/three/build/three.module.js"
+import {Vector3, Box3} from "../node_modules/three/build/three.module.js"
 
 const SIZE = new Vector3()
 const CENTER = new Vector3()

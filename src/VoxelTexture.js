@@ -10,7 +10,7 @@ import {
     NearestFilter,
     MeshFaceMaterial,
     Texture,
-} from "./node_modules/three/build/three.module.js"
+} from "three"
 
 const createAtlas = window.atlaspack
 

@@ -1,6 +1,6 @@
-import Panel2D from "./node_modules/threejs-2d-components/src/panel2d.js"
-import Label2D from "./node_modules/threejs-2d-components/src/label2d.js"
-import Button2D from "./node_modules/threejs-2d-components/src/button2d.js"
+import Panel2D from "../../node_modules/threejs-2d-components/src/panel2d.js"
+import Label2D from "../../node_modules/threejs-2d-components/src/label2d.js"
+import Button2D from "../../node_modules/threejs-2d-components/src/button2d.js"
 
 
 const on = (elem, type, cb) => elem.addEventListener(type,cb)

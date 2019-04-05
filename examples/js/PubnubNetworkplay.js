@@ -1,5 +1,5 @@
-import {Vector3,} from "./node_modules/three/build/three.module.js"
-import {ECSComp} from './ECSComp.js'
+import {Vector3,} from "three"
+import {ECSComp} from '../../src/ECSComp.js'
 
 const pubkey = 'pub-c-0a0c49cb-8e11-4b10-8347-3af6cf048b46';
 const subkey = 'sub-c-1cf05cbc-4d88-11e9-82b8-86fda2e42ae9';

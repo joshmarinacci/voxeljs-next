@@ -2,7 +2,7 @@
   "name": "voxeljs-next",
   "version": "1.0.0",
   "description": "The next generation of Voxel JS.",
-  "main": "ChunkManager.js",
+  "main": "src/ChunkManager.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

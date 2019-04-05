@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mine Kitten</title>
+    <script>
+        /*
+        (function(f, a, t, h, o, m){
+            a[h]=a[h]||function(){
+                (a[h].q=a[h].q||[]).push(arguments)
+            };
+            o=f.createElement('script'),
+                m=f.getElementsByTagName('script')[0];
+            o.async=1; o.src=t; o.id='fathom-script';
+            m.parentNode.insertBefore(o,m)
+        })(document, window, '//stats.josh.earth/tracker.js', 'fathom');
+        fathom('set', 'siteId', 'GISNV');
+        fathom('trackPageview');
+        */
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<h1>VoxelJS for VR Test</h1>
+<p>
+    Press <b>play full screen</b> in desktop mode. Press <b>play in vr</b> to play in VR mode (if available).
+    Or just play in regular windowed mode. Whatever you like.
+</p>
+
+<div>
+    <div id="progress">
+        <label>loading</label>
+        <progress id="progress-bar" value="0.5"></progress>
+    </div>
+    <button id="fullscreen">play full screen</button>
+    <button id="entervr">play in vr</button>
+    <div class="button-bar">
+        <button id="save">save</button>
+        <button id="reload">reload</button>
+    </div>
+    <div class="button-bar">
+        <button id="use-greedy-mesher" class="selected mesher">greedy mesher</button>
+        <button id="use-culled-mesher" class="mesher">culled mesher</button>
+        <button id="toggle-texture" class="selected">textures</button>
+        <button id="toggle-ao" class="selected">shadows</button>
+        <button id="connect-voice">voice</button>
+        <button id="share">shared playing</button>
+    </div>
+</div>
+<div id="container">
+    <div id="touch-overlay">
+        <button id="left">left</button>
+        <button id="right">right</button>
+        <button id="up">up</button>
+        <button id="down">down</button>
+        <button id="exit-fullscreen">escape</button>
+        <button id="menu-button">menu</button>
+        <button id="jump-button">jump</button>
+    </div>
+</div>
+
+
+<ul>
+    <li>full screen: mouse to move camera, arrows and WASD to move</li>
+    <li>window mode: mouse to click on things, arrows to turn, WASD to move</li>
+    <li>VR mode: <ul>
+        <li>trigger to click</li>
+        <li>hold 'up' butotn to move in direction of pointer</li>
+        <li>swipe left and right to rotate camera</li>
+        <li>click left to toggle create vs destroy</li>
+        <li>click right to open block settings</li>
+    </ul>
+    <li>voice: turn on voice to talk to others playing the game</li>
+    <li>toggle active vs creative mode with the 'c' key</li>
+</ul>
+
+<script src="../node_modules/webrtc-sdk/js/webrtc-v2.js"></script>
+<script src="../node_modules/pubnub/dist/web/pubnub.js"></script>
+<script type="module">
+    import {TextureManager} from '../src/TextureManager.js'
+    import {WebRTCAudioChat} from './js/WebRTCAudioChat.js'
+    import {RemotePlayersProxy} from './js/RemotePlayersProxy.js'
+
+    const $ = (sel) => document.querySelector(sel)
+    const $$ = (sel) => document.querySelectorAll(sel)
+    const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    const rand = (min,max) => Math.random()*(max-min) + min
+
+    const app = new WebXRBoilerPlate({
+        container: $("#container")
+    })
+    app.init().then((app) => {
+        app.scene.background = new Color( 0xcccccc );
+        app.comps = []
+        app.textureManager = new TextureManager()
+        app.comps.push(app.textureManager)
+
+
+
+        app.player = new Mesh()
+        app.player.position.y = 30
+        app.player_phys = new PhysHandler(app, app.player,[new SimpleMeshCollider(app)])
+        app.comps.push(player_phys)
+
+
+        // ========= event handlers
+
+        //Enable VR button
+        //when VR support is detected
+        on(app,'detected',()=>{
+            // show the enter VR button
+            $("#entervr").style.display = 'block'
+            on($("#entervr"),'click',()=> {
+                app.desktopControls.disable()
+                app.vrControls.enable()
+                app.enterVR()
+            })
+        })
+
+
+        // WebRTC Voice connection
+        app.webrtcAudio = new WebRTCAudioChat(app)
+        on($("#connect-voice"),'click',() => {
+            if(app.webrtcAudio.connected) {
+                $("#connect-voice").classList.remove('selected')
+                app.webrtcAudio.disconnect()
+            } else {
+                $("#connect-voice").classList.add('selected')
+                app.webrtcAudio.connect()
+            }
+        })
+
+
+        // ============= Network Play ================
+        app.networkPlay = new PubnubNetworkplay()
+        const shared_button = $("#share")
+        on(shared_button,'click',()=>{
+            app.networkPlay.connect()
+            if(app.networkPlay.isConnected() || app.networkPlay.isConnecting()) {
+                shared_button.classList.add('selected')
+            } else {
+                shared_button.classList.remove('selected')
+            }
+            app.rebuildAllMeshes()
+        })
+
+        app.remotePlayers = new RemotePlayersProxy(app)
+        on(app.player_phys,"move",()=>{
+            if(app.networkPlay) app.networkPlay.playerMoved(app.player_phys)
+        })
+        on(app.networkPlay,'remote-player-moved',(msg)=>{
+            console.log(msg.publisher,'moved to',msg.message.position)
+            app.remotePlayers.remotePlayerMoved(msg.publisher,msg.message.position)
+        })
+        on(app.networkPlay,'remote-player-voxels',(msg) => {
+            console.log(msg.publisher,'changed voxels',msg.message.voxels)
+            msg.message.voxels.forEach(voxel => {
+                const pos = new Vector3(voxel.position.x,voxel.position.y,voxel.position.z)
+                app.chunkManager.setVoxelAtCoordinates(pos, voxel.type)
+                const chunkIndex = app.chunkManager.chunkIndexAtCoordinates(pos.x,pos.y,pos.z)
+                const chunk = app.chunkManager.chunks[chunkIndex.join("|")]
+                if(chunk) rebuildMesh(chunk)
+            })
+        })
+
+        return app.textureManager.load(['grass','brick','dirt','anim','tnt','arrows'])
+    }).then(()=>{
+        app.rebuildAllMeshes()
+    }).catch(e => {
+        console.log('ERROR',e)
+    })
+
+
+</script>
+
+</body>
+</html>

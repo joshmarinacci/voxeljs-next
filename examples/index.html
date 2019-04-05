@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mine Kitten</title>
+    <script>
+        /*
+        (function(f, a, t, h, o, m){
+            a[h]=a[h]||function(){
+                (a[h].q=a[h].q||[]).push(arguments)
+            };
+            o=f.createElement('script'),
+                m=f.getElementsByTagName('script')[0];
+            o.async=1; o.src=t; o.id='fathom-script';
+            m.parentNode.insertBefore(o,m)
+        })(document, window, '//stats.josh.earth/tracker.js', 'fathom');
+        fathom('set', 'siteId', 'GISNV');
+        fathom('trackPageview');
+        */
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<h1>VoxelJS for VR Test</h1>
+<p>
+    Press <b>play full screen</b> in desktop mode. Press <b>play in vr</b> to play in VR mode (if available).
+    Or just play in regular windowed mode. Whatever you like.
+</p>
+
+<div>
+    <div id="progress">
+        <label>loading</label>
+        <progress id="progress-bar" value="0.5"></progress>
+    </div>
+    <button id="fullscreen">play full screen</button>
+    <button id="entervr">play in vr</button>
+    <div class="button-bar">
+        <button id="save">save</button>
+        <button id="reload">reload</button>
+    </div>
+    <div class="button-bar">
+        <button id="use-greedy-mesher" class="selected mesher">greedy mesher</button>
+        <button id="use-culled-mesher" class="mesher">culled mesher</button>
+        <button id="toggle-texture" class="selected">textures</button>
+        <button id="toggle-ao" class="selected">shadows</button>
+        <button id="connect-voice">voice</button>
+        <button id="share">shared playing</button>
+    </div>
+</div>
+<div id="container">
+    <div id="touch-overlay">
+        <button id="left">left</button>
+        <button id="right">right</button>
+        <button id="up">up</button>
+        <button id="down">down</button>
+        <button id="exit-fullscreen">escape</button>
+        <button id="menu-button">menu</button>
+        <button id="jump-button">jump</button>
+    </div>
+</div>
+
+
+<!--<ul>-->
+<!--    <li>full screen: mouse to move camera, arrows and WASD to move</li>-->
+<!--    <li>window mode: mouse to click on things, arrows to turn, WASD to move</li>-->
+<!--    <li>VR mode: <ul>-->
+<!--        <li>trigger to click</li>-->
+<!--        <li>hold 'up' butotn to move in direction of pointer</li>-->
+<!--        <li>swipe left and right to rotate camera</li>-->
+<!--        <li>click left to toggle create vs destroy</li>-->
+<!--        <li>click right to open block settings</li>-->
+<!--    </ul>-->
+<!--    <li>voice: turn on voice to talk to others playing the game</li>-->
+<!--    <li>toggle active vs creative mode with the 'c' key</li>-->
+<!--</ul>-->
+
+<script src="../node_modules/atlaspack/index.js"></script>
+<script type="module">
+
+    import WebXRBoilerPlate from "../node_modules/webxr-boilerplate/WebXRBoilerPlate.js"
+    import {Mesh, MeshLambertMaterial, PlaneGeometry,
+        CubeGeometry,
+        Color, DirectionalLight, AmbientLight, Vector3, TextureLoader, Group} from "../node_modules/three/build/three.module.js"
+    import {TextureManager} from '../src/TextureManager.js'
+    import {PhysHandler} from '../src/PhysHandler.js'
+    import {SimpleMeshCollider} from "../src/SimpleMeshCollider.js"
+    import {ChunkManager} from "../src/ChunkManager.js"
+    import {GreedyMesher} from "../src/GreedyMesher.js"
+    import {CulledMesher} from "../src/CulledMesher.js"
+    import {BlockPicker} from './js/BlockPicker.js'
+    import {VRControls} from "../src/VRControls.js"
+    import {DesktopControls} from '../src/DesktopControls.js'
+    import {FullScreenControls} from '../src/FullscreenControls.js'
+    import {KeyboardControls} from '../src/KeyboardControls.js'
+    import {TouchControls} from '../src/TouchControls.js'
+    import {generateChunkInfoFromFunction, toRad} from '../src/utils.js'
+    import {VoxelMesh} from "../src/VoxelMesh.js"
+    /*
+    // converter function from chunks to meshs
+
+    // managers chunks
+    //converts chunks to three mesh
+    import {PersistenceManager} from './js/PersistenceManager.js'
+    //manages loading textures and the custom shader
+
+
+
+    import {PigComp} from './js/PigComp.js'
+    import {PubnubNetworkplay} from './js/PubnubNetworkplay.js'
+    import {ItemManager} from './js/ItemManager.js'
+    import {SmashParticles} from './js/SmashParticles.js'
+    import {ExplosionParticles} from './js/ExplosionParticles.js'
+    import VRStats from "../src/VRStats.js"
+    */
+
+    //JQuery-like selectors
+    const $ = (sel) => document.querySelector(sel)
+    const $$ = (sel) => document.querySelectorAll(sel)
+    const on = (elem, type, cb) => elem.addEventListener(type,cb)
+    //return random number between min and max
+    const rand = (min,max) => Math.random()*(max-min) + min
+
+
+    const app = new WebXRBoilerPlate({
+        container: $("#container")
+    })
+
+    app.init().then((app) => {
+        app.CHUNK_SIZE = 16
+        app.RAYCAST_DISTANCE = 30
+        app.comps = []
+        app.scene.background = new Color( 0xcccccc );
+
+        app.aoEnabled = true
+
+        app.active = true
+
+        //load a cat texture
+        app.textureLoader = new TextureLoader()
+        const texture = app.textureLoader.load('./cat.jpg')
+
+        app.textureManager = new TextureManager()
+
+
+        app.player = new Mesh()
+        app.player.position.y = 30
+        app.player_phys = new PhysHandler(app, app.player,[new SimpleMeshCollider(app)])
+        app.comps.push(app.player_phys)
+        app.player_phys.enable()
+
+        const onload = app.textureManager.load(['grass','brick','dirt','anim','tnt','arrows']).then(()=>{
+            app.textureManager.markAsAnimated('anim')
+            app.rebuildAllMeshes()
+        })
+        app.comps.push(app.textureManager)
+
+        const valley = (i,j,k) =>  j <= (i*i + k*k) * 31 / (32*32*2) + 1 ? 1 + (1<<15) : 0;
+        const flat = (i,j,k) => {
+            // if((i+2)%4 === 0 && k%4 === 0 && j < 3 && j > -3) return 3
+            if(j>0 && j <3 && i>-5 && i<5) {
+                if(k< -2 && k >-5) return 4
+                if(k > 2 && k < 5) return 4
+                if(k > 5 && k < 8) return 4
+            }
+
+            if(i===5 && j===1 && k===-2) return 5
+            if(i===10 && j===1 && k===-2) return 5
+
+            /*
+            if(j === 0) {
+                if(i === -8) return 2
+                if(i === +8) return 2
+                if(k === -18) return 2
+                if(k === -8) return 2
+            }*/
+            if(j <1 && k < -5 && k > -10 ) return 0
+            if(j < 1 && j > -10) {
+                return 2
+            }
+            return 0
+        }
+
+        const single = (i,j,k) => {
+            // if((i >= 3 && i<=5 ) && (j >= -3 && j <=-2) && (k >= -7 && k<=-4)) return 2
+            // if(i >= -3 && i <=3 && j === -1 && k === -7) return 2;
+            // if(i === 3 && j<5 && j>=-1 && k === -7 ) return 2;
+            // if(i >=  1 && i <=3  && j === 2 && k===-4) return 2
+            if(i === 2 && j === -1 && (k<=-5 && k>=-5)) return 3
+            // if(i >=  1 && i <=3  && j >= -2 && j<=0 && k===-6 ) {
+            // if(i===2 && j===1) return 0
+            // return 2
+            // }
+            // if(i >=  0 && i <=4  && j >= -1 && j<=3 && k===-7) {
+            //     return 2
+            // }
+
+            // if(i === 2 && j === 1 && k===-5) return 2
+            // if(i === 3 && j === 1 && k===-4) return 2
+            return 0
+        }
+
+        const center = (i,j,k) => {
+            // if(i===2 && j===4 && k===2) return 2
+            if(i>=0 && i<=5 && j===0 && k===0) return 5
+            // if(i===3 && j===5 && k===1) return 2
+            // if(i===+16 && j===1 && k===0) return 3
+            return 0
+        }
+
+        const gradient = (i,j,k) => {
+            if(i>=-5 && i<5 && j===0 && k === -5) return i
+            return 0
+        }
+
+        const pyramid = (i,j,k) => {
+            const ox = -4
+            const oy = 4
+            const oz = 0
+            const w = 7
+            const d = 7
+            const h = 4
+            for(let r = 0; r<h; r++) {
+                if(i>=ox+r && i<ox+w-r && j===oy+r && k>=oz+r && k<oz+d-r) return 5
+            }
+            for(let r = 0; r<h; r++) {
+                if(i>=ox+r && i<ox+w-r && j===oy-r && k>=oz+r && k<oz+d-r) return 5
+            }
+            return 0
+        }
+
+        // ========== setup the chunk manager and cache
+        app.CHUNK_CACHE = {}
+        app.chunkManager = new ChunkManager({
+            chunkDistance:3,
+            cubeSize:1,
+            chunkSize:app.CHUNK_SIZE,
+            generateVoxelChunk: (low, high, cx,cy,cz) => {
+                const id = [cx,cy,cz].join('|')
+                if(app.CHUNK_CACHE[id]) return app.CHUNK_CACHE[id]
+                return generateChunkInfoFromFunction(low, high, flat)
+            },
+        });
+
+
+        // const greedyMesher = new GreedyMesher()
+        // const culledMesher = new CulledMesher()
+
+        //set the mesher to use
+        app.mesher = new GreedyMesher()
+
+        // ======== setup chunk manipulation functions =======
+
+        // rebuild the mesh for a chunk
+        app.rebuildMesh = (chunk) => {
+            const pos = new Vector3(chunk.chunkPosition[0],chunk.chunkPosition[1],chunk.chunkPosition[2])
+
+            if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
+            chunk.vmesh = new VoxelMesh(chunk, app.mesher, SCALE, app)
+            chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh(app.textureManager.material)
+            // materials.paint(chunk.surfaceMesh)
+            group.add(chunk.surfaceMesh)
+            chunk.surfaceMesh.position.copy(pos.multiplyScalar(app.CHUNK_SIZE))
+        }
+
+
+        // rebuild all chunks in the cache
+        app.rebuildAllMeshes = () => {
+            Object.keys(app.chunkManager.chunks).forEach(key => app.rebuildMesh(app.chunkManager.chunks[key]))
+        }
+
+        // create a block with the currently selected block type
+        app.createBlock = (pos) => {
+            if(app.dialog.panel.visible) return
+            app.setBlock(pos, app.textureManager.getBlockTypeForName(app.dialog.selectedColor))
+        }
+
+        // remove a block at the positon
+        app.removeBlock = (pos) => {
+            if(app.dialog.panel.visible) return
+            pos.floor()
+            // const old_block = app.chunkManager.voxelAtCoordinates(pos)
+            // if(app.active && app.itemManager.isBlockTypeItem(old_block)) {
+            //     app.itemManager.removeItem(pos)
+            // } else {
+            app.setBlock(pos, 0)
+            // app.smashParticles.fire(pos)
+            // }
+        }
+
+        // actually set the block
+        app.setBlock = function(pos, value) {
+            pos.floor()
+            //set the actual value
+            this.chunkManager.setVoxelAtCoordinates(pos, value)
+            // app.networkPlay.playerSetVoxel(pos,value)
+
+            // update the chunk
+            const chunkIndex = this.chunkManager.chunkIndexAtCoordinates(pos.x,pos.y,pos.z)
+            const chunk = this.chunkManager.chunks[chunkIndex.join("|")]
+            if(chunk) this.rebuildMesh(chunk)
+        }
+
+
+        // ===== setup the camera groups =============
+        app.stageRot = new Group()
+        app.scene.add(app.stageRot)
+        app.stagePos = new Group()
+        app.stageRot.add(app.stagePos)
+        app.stagePos.position.z = -10
+        app.stagePos.position.y = -1.5
+        app.stagePos.position.x = 0
+
+        const group = new Group()
+        app.stagePos.add(group)
+
+        app.mobs = new Group()
+        app.stagePos.add(app.mobs)
+        app.playersGroup = new Group()
+        app.stagePos.add(app.playersGroup)
+
+        const SCALE = new Vector3(1.0,1.0,1.0)
+
+
+
+        // ======== EVENT HANDLERS ==========
+
+        on($('#use-culled-mesher'),'click',()=>{
+            $$(".mesher").forEach(el=>el.classList.remove('selected'))
+            $("#use-culled-mesher").classList.add('selected')
+            app.mesher = culledMesher
+            rebuildAllMeshes()
+        })
+        on($('#use-greedy-mesher'),'click',()=>{
+            $$(".mesher").forEach(el=>el.classList.remove('selected'))
+            $("#use-greedy-mesher").classList.add('selected')
+            app.mesher = greedyMesher
+            rebuildAllMeshes()
+        })
+
+
+        // ========= crosshairs for full screen mode =========
+        // TODO: move this into full screen mode
+        const crosshairs_geometry = new PlaneGeometry(0.1,0.01)
+        crosshairs_geometry.merge(new PlaneGeometry(0.01,0.1))
+        const crosshairs = new Mesh( crosshairs_geometry, new MeshLambertMaterial({color:'red'}))
+        crosshairs.position.set(0,1.6,-1.0)
+        app.scene.add(crosshairs)
+        crosshairs.visible = false
+
+
+        let lastPos = new Vector3(0,0,0)
+        function updateChunks() {
+            if(!lastPos.equals(app.stagePos.position)) {
+                const startTime = Date.now()
+                const pos = app.stagePos.position.clone().multiplyScalar(-1)
+                app.chunkManager.requestMissingChunks(pos)
+                app.chunkManager.removeFarChunks(pos, group)
+                const endTime = Date.now()
+                const diff = endTime - startTime
+                if(diff > 5)  console.log("meshing time",diff)
+            }
+            lastPos.copy(app.stagePos.position)
+        }
+
+
+        /// ============= Highlight Object ==========
+        const highlight_geo = new CubeGeometry(1.1,1.1,1.1, 4,4)
+        highlight_geo.translate(0.5,0.5,0.5)
+        app.highlight_cube = new Mesh(highlight_geo,
+            new MeshLambertMaterial({color:'green',
+                depthTest:true,
+                wireframe:true,
+                wireframeLinewidth: 3,
+                transparent: true,
+                opacity: 0.5,
+            }))
+        app.highlight_cube.position.set(-2,0,-5)
+        app.stagePos.add(app.highlight_cube)
+
+
+        //a standard directional light from above
+        const light = new DirectionalLight( 0xffffff, 1.0 );
+        light.position.set( 0, 10, 5 ).normalize();
+        app.scene.add( light );
+
+        //a standard ambient light
+        app.scene.add(new AmbientLight(0xffffff,0.3))
+
+
+        // a dialog to choose a different block type
+        app.dialog = new BlockPicker(app)
+        app.dialog.panel.position.set(0,1.5,-1)
+        app.dialog.panel.visible = false
+        app.toggleDialog = () => {
+            app.dialog.rebuild()
+            app.dialog.panel.visible = !app.dialog.panel.visible
+        }
+
+        app.destroyBlockActive = true
+        app.togglePointer = () => {
+            app.destroyBlockActive = !app.destroyBlockActive
+            if(app.destroyBlockActive) {
+                app.highlight_cube.material.color.set(0xff0000)
+                vrControls.pointer.controller1.line.material.color.set(0x880000)
+            } else {
+                app.highlight_cube.material.color.set(0x00ff00)
+                vrControls.pointer.controller1.line.material.color.set(0x008800)
+            }
+        }
+
+
+
+        app.moveHighlight = (res) => {
+            if(app.dialog.panel.visible) return
+            const pos = res.hitPosition
+            app.highlight_cube.position.copy(pos)
+            // vrstats.setProperty('pos',`${pos.x} ${pos.y} ${pos.z}`)
+            // vrstats.setProperty('block',`${res.hitBlock}`)
+        }
+
+
+        // ========= Setup VR Controls
+        app.vrControls = new VRControls(app)
+        app.comps.push(app.vrControls)
+        on(app.vrControls,'highlight',(e) => {
+            if(app.destroyBlockActive) {
+                app.moveHighlight(e.hitPosition)
+            } else {
+                e.hitPosition.add(e.hitNormal)
+                app.moveHighlight(e.hitPosition)
+            }
+        })
+        on(app.vrControls,'trigger',(a) => {
+            if(app.destroyBlockActive) {
+                app.removeBlock(a.hitPosition)
+            } else {
+                a.hitPosition.add(a.hitNormal)
+                app.createBlock(a.hitPosition)
+            }
+        })
+        on(app.vrControls,'toggle-pointer',app.togglePointer)
+        on(app.vrControls,'show-dialog',app.toggleDialog)
+
+
+        // =========== setup the desktop controls ===========
+        app.desktopControls = new DesktopControls(app)
+        on(app.desktopControls,'highlight',app.moveHighlight)
+        on(app.desktopControls,'setblock',app.createBlock)
+        on(app.desktopControls,'removeblock',app.removeBlock)
+        app.comps.push(app.desktopControls)
+
+        // ================ setup the full screen controls
+        app.fullscreenControls = new FullScreenControls(app)
+        on(app.fullscreenControls,'highlight', app.moveHighlight)
+        on(app.fullscreenControls,'setblock', app.createBlock)
+        on(app.fullscreenControls,'removeblock',app.removeBlock)
+        on(app.fullscreenControls,'exit',()=>{
+            $("#touch-overlay").style.visibility = 'hidden'
+            app.exitFullscreen()
+            app.fullscreenControls.disable()
+            app.desktopControls.enable()
+        })
+        app.comps.push(app.fullscreenControls)
+
+        // ============= setup the keyboard controls =========
+        app.keyboardControls = new KeyboardControls(app)
+        on(app.keyboardControls, 'show-dialog',app.toggleDialog)
+        app.keyboardControls.enable()
+        app.comps.push(app.keyboardControls)
+
+        // ============ setup the touch controls =============
+        app.touchControls = new TouchControls(app)
+        on(app.touchControls,'highlight',app.moveHighlight)
+        on(app.touchControls,'setblock', app.createBlock)
+        on(app.touchControls,'removeblock',app.removeBlock)
+        app.comps.push(app.touchControls)
+
+
+
+        app.chunkManager.on('missingChunk',(chunkId)=>{
+            app.rebuildMesh(app.chunkManager.generateChunk(new Vector3(chunkId[0],chunkId[1],chunkId[2])))
+        })
+        app.chunkManager.on('removingChunk',(chunk) => {
+            group.remove(chunk.surfaceMesh)
+            chunk.surfaceMesh.geometry.dispose()
+            app.CHUNK_CACHE[chunk.id] = chunk.data
+        })
+        onload.then(()=>{
+            app.chunkManager.requestMissingChunks(new Vector3(0,0,0))
+            app.dialog.setSelectedToDefault()
+        })
+
+
+
+        // const pig = new PigComp(app)
+        // pig.enable()
+        // comps.push(pig)
+
+        // const vrstats = new VRStats(app)
+        // vrstats.cmesh.position.y = 3
+        // vrstats.enable()
+        // comps.push(vrstats)
+
+
+        /*
+        app.smashParticles = new SmashParticles(app)
+        comps.push(app.smashParticles)
+        app.explosionParticles = new ExplosionParticles(app)
+        comps.push(app.explosionParticles)
+        */
+
+        // things to do on every render tick
+        // this is the render loop
+        let last = 0
+        app.onRender((time, app)=> {
+            // materials.tick(time)
+            const dt = time-last
+            // console.log('dt',dt)
+            last = time
+            updateChunks()
+            // if(app.player_phys) app.player_phys.update(dt)
+            app.comps.forEach(comp => {
+                if(comp.isEnabled()) comp.update(time,dt)
+            })
+        })
+
+        //update progress indicator while loading
+        on(app,'progress',(prog)=> $("#progress").setAttribute('value',100*prog))
+
+        app.desktopControls.enable()
+        app.touchControls.enable()
+
+        //when all assets are loaded
+        on(app,'loaded',()=>{
+            // hide the loading progress bar
+            $("#progress").style.display = 'none'
+            //show the fullscreen button
+            $("#fullscreen").style.display = 'block'
+            on($("#fullscreen"),'click',()=> {
+                $("#touch-overlay").style.visibility = 'visible'
+                if(app.renderer.domElement.requestFullscreen) {
+                    crosshairs.visible = true
+                    app.desktopControls.disable()
+                    app.playFullscreen()
+                    setTimeout(()=>{
+                        fullscreenControls.enable()
+                    },100)
+                } else {
+                    $("body").classList.add('fullscreen')
+                    app.resizeOnNextRepaint = true
+                }
+            })
+            on($('#exit-fullscreen'),'click',()=>{
+                $("#touch-overlay").style.visibility = 'hidden'
+                $("body").classList.remove('fullscreen')
+                app.resizeOnNextRepaint = true
+            })
+            on($("#menu-button"),'click',()=>{
+                app.toggleDialog()
+            })
+            on($("#jump-button"),'mousedown',()=>{
+                app.player_phys.startJump()
+            })
+            on($("#jump-button"),'mouseup',()=>{
+                app.player_phys.endJump()
+            })
+        })
+        //when VR support is detected
+        on(app,'detected',()=>{
+            // show the enter VR button
+            $("#entervr").style.display = 'block'
+            on($("#entervr"),'click',()=> {
+                app.desktopControls.disable()
+                vrControls.enable()
+                app.enterVR()
+            })
+        })
+
+        /*
+        on($("#save"),'click',() => new PersistenceManager()
+            .save(chunkManager,CHUNK_CACHE)
+            .then(resp => new PersistenceManager().load(chunkManager))
+            .then(() => rebuildAllMeshes())
+        )
+        on($("#reload"),'click',()=>{
+            return new PersistenceManager()
+                .load(chunkManager)
+                .then(() => rebuildAllMeshes())
+        })
+         */
+
+        // const texture_button = $("#toggle-texture")
+        // on(texture_button,'click',()=>{
+        //     app.textureManager.texturesEnabled = !app.textureManager.texturesEnabled
+        //     if(app.textureManager.texturesEnabled) {
+        //         texture_button.classList.add('selected')
+        //     } else {
+        //         texture_button.classList.remove('selected')
+        //     }
+        // })
+
+        // const AO_button = $("#toggle-ao")
+        // on(AO_button,'click',()=>{
+        //     app.aoEnabled = !app.aoEnabled
+        //     if(app.aoEnabled) {
+        //         AO_button.classList.add('selected')
+        //     } else {
+        //         AO_button.classList.remove('selected')
+        //     }
+        //     rebuildAllMeshes()
+        // })
+
+        // app.itemManager = new ItemManager(app)
+
+    })
+        .catch(e => console.log(e))
+
+
+</script>
+</body>
+</html>

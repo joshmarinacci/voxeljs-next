@@ -1,4 +1,4 @@
-import {Ray, Vector3,} from "./node_modules/three/build/three.module.js"
+import {Ray, Vector3,} from "../node_modules/three/build/three.module.js"
 import {traceRay} from './raycast.js'
 import {ECSComp} from './ECSComp.js'
 import {toRad, EPSILON} from "./utils.js"

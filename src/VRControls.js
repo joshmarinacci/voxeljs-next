@@ -1,5 +1,5 @@
-import {Vector3,} from "./node_modules/three/build/three.module.js"
-import {Pointer, POINTER_CLICK} from "./node_modules/webxr-boilerplate/Pointer.js"
+import {Vector3,} from "../node_modules/three/build/three.module.js"
+import {Pointer, POINTER_CLICK} from "../node_modules/webxr-boilerplate/Pointer.js"
 import {traceRay} from "./raycast.js"
 import {ECSComp} from './ECSComp.js'
 import {DIRS, toRad} from "./utils.js"
@@ -10,13 +10,13 @@ const SPEED = 0.1
 
 const TRIGGER = 'trigger'
 
-export default class VRControls extends ECSComp {
+export class VRControls extends ECSComp {
 
     constructor(app, distance, chunkManager) {
         super()
         this.app = app
-        this.distance = distance
-        this.chunkManager = chunkManager
+        // this.distance = distance
+        // this.chunkManager = chunkManager
         this.states = { touchpad: false}
         this.pointer = new Pointer(app,{
             //don't intersect with anything. only use for orientation and trigger state

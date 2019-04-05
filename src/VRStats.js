@@ -1,6 +1,6 @@
 import {Vector3, Mesh, MeshLambertMaterial, BoxBufferGeometry,
     CanvasTexture, PlaneGeometry, MeshBasicMaterial,
-} from "./node_modules/three/build/three.module.js"
+} from "three"
 import {ECSComp} from "./ECSComp.js"
 
 export default class VRStats extends ECSComp {
