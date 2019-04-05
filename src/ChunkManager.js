@@ -45,7 +45,7 @@ export class ChunkManager {
         this.listeners = {}
         this.distance = opts.chunkDistance || 2
         this.chunkSize = opts.chunkSize || 32
-        this.cubeSize = opts.cubeSize || 25
+        this.cubeSize = opts.cubeSize || 1
         this.generateVoxelChunk = opts.generateVoxelChunk
         this.chunks = {}
 
@@ -116,7 +116,7 @@ export class ChunkManager {
     //make a chunk at the position in chunk coords
     generateChunk(pos) {
         const bounds = this.getBounds(pos.x, pos.y, pos.z)
-        const chunkData = this.generateVoxelChunk(bounds[0], bounds[1], pos.x, pos.y, pos.z)
+        const chunkData = this.generateVoxelChunk(bounds[0], bounds[1], pos)
         const chunkObj = new Chunk(chunkData, pos, this.chunkBits)
         this.chunks[chunkObj.id] = chunkObj
         return chunkObj

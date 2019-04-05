@@ -153,32 +153,29 @@
         // ========== setup the chunk manager and cache
         app.CHUNK_CACHE = {}
         app.chunkManager = new ChunkManager({
-            chunkDistance:3,
-            cubeSize:1,
+            // chunkDistance:3,
+            // cubeSize:1,
             chunkSize:app.CHUNK_SIZE,
-            generateVoxelChunk: (low, high, cx,cy,cz) => {
-                const id = [cx,cy,cz].join('|')
+            generateVoxelChunk: (low, high, pos) => {
+                const id = [pos.x,pos.y,pos.z].join('|')
                 if(app.CHUNK_CACHE[id]) return app.CHUNK_CACHE[id]
                 return generateChunkInfoFromFunction(low, high, flat)
             },
         });
 
 
-        //set the mesher to use
-        app.mesher = new GreedyMesher()
-
         // ======== setup chunk manipulation functions =======
 
+        //set the mesher to use
+        app.mesher = new GreedyMesher()
         // rebuild the mesh for a chunk
         app.rebuildMesh = (chunk) => {
-            const pos = new Vector3(chunk.chunkPosition[0],chunk.chunkPosition[1],chunk.chunkPosition[2])
-
-            if(chunk.surfaceMesh) group.remove(chunk.surfaceMesh)
-            chunk.vmesh = new VoxelMesh(chunk, app.mesher, SCALE, app)
-            chunk.surfaceMesh = chunk.vmesh.createSurfaceMesh(app.textureManager.material)
-            // materials.paint(chunk.surfaceMesh)
-            group.add(chunk.surfaceMesh)
-            chunk.surfaceMesh.position.copy(pos.multiplyScalar(app.CHUNK_SIZE))
+            if(chunk.surfaceMesh) app.chunkGroup.remove(chunk.surfaceMesh)
+            chunk.surfaceMesh = new VoxelMesh(chunk, app.mesher, SCALE, app)
+                .createSurfaceMesh(app.textureManager.material)
+            app.chunkGroup.add(chunk.surfaceMesh)
+            const pos = chunk.realPosition.clone().multiplyScalar(app.CHUNK_SIZE)
+            chunk.surfaceMesh.position.copy(pos)
         }
 
         // rebuild all chunks in the cache
@@ -193,7 +190,7 @@
 
         // when chunk removed, remove the mesh and data
         app.chunkManager.on('removingChunk',(chunk) => {
-            group.remove(chunk.surfaceMesh)
+            app.chunkGroup.remove(chunk.surfaceMesh)
             chunk.surfaceMesh.geometry.dispose()
             app.CHUNK_CACHE[chunk.id] = chunk.data
         })
@@ -233,13 +230,8 @@
         app.stagePos.position.y = -1.5
         app.stagePos.position.x = 0
 
-        const group = new Group()
-        app.stagePos.add(group)
-
-        app.mobs = new Group()
-        app.stagePos.add(app.mobs)
-        app.playersGroup = new Group()
-        app.stagePos.add(app.playersGroup)
+        app.chunkGroup = new Group()
+        app.stagePos.add(app.chunkGroup)
 
         const SCALE = new Vector3(1.0,1.0,1.0)
 
@@ -268,7 +260,7 @@
                 const pos = app.stagePos.position.clone().multiplyScalar(-1)
                 app.chunkManager.requestMissingChunks(pos)
                 // and remove the chunks that might be out of range now
-                app.chunkManager.removeFarChunks(pos, group)
+                app.chunkManager.removeFarChunks(pos, app.chunkGroup)
                 const endTime = Date.now()
                 const diff = endTime - startTime
                 if(diff > 5)  console.log("meshing time",diff)
