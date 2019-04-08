@@ -361,6 +361,21 @@
             app.fullscreenControls.disable()
             app.desktopControls.enable()
         })
+        // on click, if fullscreen support, then really enter fullscreen, else fake it with CSS
+        on($("#fullscreen"),'click',()=> {
+            $("#touch-overlay").style.visibility = 'visible'
+            if(app.renderer.domElement.requestFullscreen) {
+                crosshairs.visible = true
+                app.desktopControls.disable()
+                app.playFullscreen()
+                setTimeout(()=>{
+                    fullscreenControls.enable()
+                },100)
+            } else {
+                $("body").classList.add('fullscreen')
+                app.resizeOnNextRepaint = true
+            }
+        })
 
         // ============= setup the keyboard controls =========
         app.keyboardControls = new KeyboardControls(app)
@@ -406,20 +421,6 @@
             $("#progress").style.display = 'none'
             //show the fullscreen button
             $("#fullscreen").style.display = 'block'
-            on($("#fullscreen"),'click',()=> {
-                $("#touch-overlay").style.visibility = 'visible'
-                if(app.renderer.domElement.requestFullscreen) {
-                    crosshairs.visible = true
-                    app.desktopControls.disable()
-                    app.playFullscreen()
-                    setTimeout(()=>{
-                        fullscreenControls.enable()
-                    },100)
-                } else {
-                    $("body").classList.add('fullscreen')
-                    app.resizeOnNextRepaint = true
-                }
-            })
         })
         //when VR support is detected
         on(app,'detected',()=>{
