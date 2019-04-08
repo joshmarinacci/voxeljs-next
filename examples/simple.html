@@ -98,6 +98,7 @@
     import {TouchControls} from '../src/TouchControls.js'
     import {generateChunkInfoFromFunction, toRad} from '../src/utils.js'
     import {VoxelMesh} from "../src/VoxelMesh.js"
+    import {CulledMesher} from '../src/CulledMesher'
 
     //JQuery-like selectors
     const $ = (sel) => document.querySelector(sel)
@@ -143,9 +144,16 @@
         // function to generate a flat world
         const flat = (i,j,k) => {
             //an gap in the floor made of air
-            if(j <1 && k < -5 && k > -10 ) return 0
+            // if(j <1 && k < -5 && k > -10 ) return 0
             //the floor is brick, from depth 0 to -10
-            if(j < 1 && j > -10) return 2
+            if(j < 1 && j > -10) return 1
+
+            //move back 10
+            k+=30
+            //a dome
+            if((i*i + j*j + k*k) < 80) {
+                return 2
+            }
             //nothing else in the world
             return 0
         }
@@ -167,7 +175,8 @@
         // ======== setup chunk manipulation functions =======
 
         //set the mesher to use
-        app.mesher = new GreedyMesher()
+        // app.mesher = new GreedyMesher()
+        app.mesher = new CulledMesher()
         // rebuild the mesh for a chunk
         app.rebuildMesh = (chunk) => {
             if(chunk.surfaceMesh) app.chunkGroup.remove(chunk.surfaceMesh)
