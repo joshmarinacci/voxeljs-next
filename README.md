@@ -18,7 +18,7 @@ browser.
 
 # How to use VoxelJS
 
-Start by copying and modifying the main [example](examples/index.html) application.
+Start by copying and modifying the main [example](examples/simple.html) application.
 
 ## Add new textures
 
