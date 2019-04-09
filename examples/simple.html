@@ -43,10 +43,10 @@
     </div>
     <button id="fullscreen">play full screen</button>
     <button id="entervr">play in vr</button>
-    <div class="button-bar">
-        <button id="save">save</button>
-        <button id="reload">reload</button>
-    </div>
+<!--    <div class="button-bar">-->
+<!--        <button id="save">save</button>-->
+<!--        <button id="reload">reload</button>-->
+<!--    </div>-->
 <!--    <div class="button-bar">-->
 <!--        <button id="use-greedy-mesher" class="selected mesher">greedy mesher</button>-->
 <!--        <button id="use-culled-mesher" class="mesher">culled mesher</button>-->
@@ -90,7 +90,7 @@
 <script src="../node_modules/atlaspack/index.js"></script>
 <script type="module">
 
-    import WebXRBoilerPlate from "../node_modules/webxr-boilerplate/WebXRBoilerPlate.js"
+    import WebXRBoilerPlate, {FULLSCREEN_ENTERED, FULLSCREEN_EXITED} from "../node_modules/webxr-boilerplate/WebXRBoilerPlate.js"
     import {Mesh, MeshLambertMaterial, PlaneGeometry,
         CubeGeometry,
         Color, DirectionalLight, AmbientLight, Vector3, TextureLoader, Group} from "../node_modules/three/build/three.module.js"
@@ -373,35 +373,44 @@
         on(app.fullscreenControls,'highlight', app.moveHighlight)
         on(app.fullscreenControls,'setblock', app.createBlock)
         on(app.fullscreenControls,'removeblock',app.removeBlock)
+        /*
         on(app.fullscreenControls,'exit',()=>{
+            console.log("exiting here")
             $("#touch-overlay").style.visibility = 'hidden'
             $("body").classList.remove('fullscreen')
-            // app.exitFullscreen()
             app.fullscreenControls.disable()
             app.desktopControls.enable()
         })
-
-        if(!app.container.requestFullscreen) {
-            if(app.container.webkitRequestFullscreen) {
-                app.container.requestFullscreen = app.container.webkitRequestFullScreen
-            }
-        }
+         */
 
         // on click, if fullscreen support, then really enter fullscreen, else fake it with CSS
         on($("#fullscreen"),'click',()=> {
-            // $("#touch-overlay").style.visibility = 'visible'
-            if(app.container.requestFullscreen) {
+            if(app.isFullscreenSupported()) {
                 crosshairs.visible = true
-                $("body").classList.add('fullscreen')
                 app.desktopControls.disable()
                 app.playFullscreen()
                 setTimeout(()=>{
-                    app.fullscreenControls.enable()
                 },100)
             } else {
                 $("body").classList.add('fullscreen')
                 app.resizeOnNextRepaint = true
             }
+        })
+
+        on(app,FULLSCREEN_ENTERED,() => {
+            $("#touch-overlay").style.visibility = 'visible'
+            console.log("really entered fullscreen")
+            $("body").classList.add('fullscreen')
+            app.fullscreenControls.enable()
+            app.resizeOnNextRepaint = true
+        })
+        on(app,FULLSCREEN_EXITED,() => {
+            $("#touch-overlay").style.visibility = 'hidden'
+            console.log("really exited fullscreen")
+            $("body").classList.remove('fullscreen')
+            app.fullscreenControls.disable()
+            app.desktopControls.enable()
+            app.resizeOnNextRepaint = true
         })
 
         // ============= setup the keyboard controls =========
@@ -420,11 +429,7 @@
         on($("#menu-button"),'click',()=> app.toggleDialog())
         on($("#jump-button"),'mousedown',()=>  app.player_phys.startJump())
         on($("#jump-button"),'mouseup',()=> app.player_phys.endJump())
-        on($('#exit-fullscreen'),'click',()=>{
-            $("#touch-overlay").style.visibility = 'hidden'
-            $("body").classList.remove('fullscreen')
-            app.resizeOnNextRepaint = true
-        })
+        on($('#exit-fullscreen'),'click',()=>app.exitFullscreen())
 
 
         // things to do on every render tick

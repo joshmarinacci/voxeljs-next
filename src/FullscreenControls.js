@@ -44,6 +44,7 @@ export class FullScreenControls extends ECSComp {
         }
         this.mousedownCallback = (e) => {
             if(!this.isEnabled()) return
+            e.preventDefault()
             const LEFT_MOUSE_BUTTON = 1
             const RIGHT_MOUSE_BUTTON = 2
             if(e.buttons === LEFT_MOUSE_BUTTON) {
@@ -58,6 +59,10 @@ export class FullScreenControls extends ECSComp {
         }
         this.errorCallback = (e) => {
             console.log("error getting pointer lock",e)
+        }
+        this.contextmenuCallback = (e) => {
+            e.preventDefault()
+            e.stopPropagation()
         }
     }
 
@@ -87,6 +92,7 @@ export class FullScreenControls extends ECSComp {
             document.addEventListener('mousemove',this.moveCallback,false)
             document.addEventListener('pointerlockerror', this.errorCallback, false);
             document.addEventListener('mousedown',this.mousedownCallback,false)
+            document.addEventListener('contextmenu',this.contextmenuCallback,false)
             requestPointerLock(this.app.renderer.domElement)
         }
     }
@@ -96,6 +102,7 @@ export class FullScreenControls extends ECSComp {
         document.removeEventListener('pointerlockchange', this.changeCallback, false)
         document.removeEventListener('mousemove', this.moveCallback, false)
         document.removeEventListener('pointerlockerror', this.errorCallback, false);
+        document.removeEventListener('contextmenu',this.contextmenuCallback,false)
         this._fire('exit', this)
     }
 }
