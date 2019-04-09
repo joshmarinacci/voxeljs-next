@@ -50,8 +50,6 @@
         <button id="right">right</button>
         <button id="up">up</button>
         <button id="down">down</button>
-        <button id="exit-fullscreen">escape</button>
-        <button id="menu-button">menu</button>
         <button id="jump-button">jump</button>
     </div>
 </div>
@@ -383,23 +381,10 @@
         on(app.touchControls,'highlight',app.moveHighlight)
         on(app.touchControls,'setblock', app.createBlock)
         on(app.touchControls,'removeblock',app.removeBlock)
-        app.touchControls.enable()
-        function setupTouchButton(sel,cb) {
-            on($(sel),'touchstart',e => {
-                e.preventDefault()
-                e.stopPropagation()
-            })
-            on($(sel),'touchmove',e => {
-                e.preventDefault()
-                e.stopPropagation()
-            })
-            on($(sel),'touchend',e => {
-                e.preventDefault()
-                e.stopPropagation()
-                cb()
-            })
+        on(app.touchControls,'show-dialog',app.toggleDialog)
+        if(app.touchControls.isTouchEnabled()) {
+            app.touchControls.enable()
         }
-        setupTouchButton("#menu-button",()=>app.toggleDialog())
 
         on($("#jump-button"),'touchstart',(e)=> {
             e.preventDefault()
@@ -415,9 +400,6 @@
             e.stopPropagation()
             app.player_phys.endJump()
         })
-
-
-        setupTouchButton('#exit-fullscreen',()=>app.exitFullscreen())
 
 
         // things to do on every render tick

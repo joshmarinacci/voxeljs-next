@@ -7,6 +7,9 @@ const SPEED = 0.1
 
 
 export class TouchControls extends ECSComp {
+    isTouchEnabled() {
+        return ('ontouchstart' in document.documentElement)
+    }
     constructor(app, distance, chunkManager) {
         super()
         this.app = app
@@ -125,6 +128,45 @@ export class TouchControls extends ECSComp {
         this.attachButton ($("#right"),DIRS.RIGHT)
         this.attachButton ($("#up"),DIRS.UP)
         this.attachButton ($("#down"),DIRS.DOWN)
+
+        const overlay = $("#touch-overlay")
+        const menuButton = document.createElement('button')
+        menuButton.id = 'menu-button'
+        overlay.appendChild(menuButton)
+        menuButton.innerText = 'Menu'
+
+        function setupTouchButton(sel,cb) {
+            on(sel,'touchstart',e => {
+                e.preventDefault()
+                e.stopPropagation()
+            })
+            on(sel,'touchmove',e => {
+                e.preventDefault()
+                e.stopPropagation()
+            })
+            on(sel,'touchend',e => {
+                e.preventDefault()
+                e.stopPropagation()
+                cb()
+            })
+            on(sel,'mousedown',e => {
+                e.preventDefault()
+                e.stopPropagation()
+            })
+            on(sel, 'mouseup', e => {
+                e.preventDefault()
+                e.stopPropagation()
+                cb()
+            })
+        }
+        setupTouchButton(menuButton,()=>this._fire('show-dialog',this))
+
+        const exitButton = document.createElement('button')
+        overlay.appendChild(exitButton)
+        exitButton.innerText = 'Exit'
+        exitButton.id = "exit-fullscreen"
+        setupTouchButton(exitButton, ()=>this.app.exitFullscreen())
+
     }
 
 
@@ -136,7 +178,6 @@ export class TouchControls extends ECSComp {
         if(this.dir_button === DIRS.DOWN) this.glideBackward()
     }
     enable() {
-        console.log("turning on")
         super.enable()
         $("#touch-overlay").style.display = 'block'
         this.canvas.addEventListener('touchstart',this.touchStart,false)
@@ -146,7 +187,6 @@ export class TouchControls extends ECSComp {
     disable() {
         if(!this.isEnabled()) return //don't recurse if already disabled
         super.disable()
-        console.log("turning off")
         $("#touch-overlay").style.display = 'none'
         this.canvas.removeEventListener('touchstart',this.touchStart)
         this.canvas.removeEventListener('touchmove',this.touchMove)
