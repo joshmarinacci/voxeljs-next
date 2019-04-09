@@ -15,10 +15,9 @@ function requestPointerLock(el) {
 
 
 export class FullScreenControls extends ECSComp {
-    constructor(app, chunkManager) {
+    constructor(app) {
         super()
         this.app = app
-        this.chunkManager = chunkManager
 
         this.changeCallback = () => {
             if(document.pointerLockElement) {
@@ -72,7 +71,7 @@ export class FullScreenControls extends ECSComp {
 
         const hitNormal = new Vector3(0,0,0)
         const hitPosition = new Vector3(0,0,0)
-        const hitBlock = traceRay(this.chunkManager,ray.origin,ray.direction,this.distance,hitPosition,hitNormal,EPSILON)
+        const hitBlock = traceRay(this.app.chunkManager,ray.origin,ray.direction,this.distance,hitPosition,hitNormal,EPSILON)
         return {
             hitBlock:hitBlock,
             hitPosition:hitPosition,

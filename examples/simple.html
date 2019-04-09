@@ -12,6 +12,12 @@
             o=f.createElement('script'),
                 m=f.getElementsByTagName('script')[0];
             o.async=1; o.src=t; o.id='fathom-script';
+
+
+
+
+
+
             m.parentNode.insertBefore(o,m)
         })(document, window, '//stats.josh.earth/tracker.js', 'fathom');
         fathom('set', 'siteId', 'GISNV');
@@ -64,6 +70,10 @@
 
 
 <!--<ul>-->
+
+
+
+
 <!--    <li>full screen: mouse to move camera, arrows and WASD to move</li>-->
 <!--    <li>window mode: mouse to click on things, arrows to turn, WASD to move</li>-->
 <!--    <li>VR mode: <ul>-->
@@ -365,19 +375,28 @@
         on(app.fullscreenControls,'removeblock',app.removeBlock)
         on(app.fullscreenControls,'exit',()=>{
             $("#touch-overlay").style.visibility = 'hidden'
-            app.exitFullscreen()
+            $("body").classList.remove('fullscreen')
+            // app.exitFullscreen()
             app.fullscreenControls.disable()
             app.desktopControls.enable()
         })
+
+        if(!app.container.requestFullscreen) {
+            if(app.container.webkitRequestFullscreen) {
+                app.container.requestFullscreen = app.container.webkitRequestFullScreen
+            }
+        }
+
         // on click, if fullscreen support, then really enter fullscreen, else fake it with CSS
         on($("#fullscreen"),'click',()=> {
-            $("#touch-overlay").style.visibility = 'visible'
-            if(app.renderer.domElement.requestFullscreen) {
+            // $("#touch-overlay").style.visibility = 'visible'
+            if(app.container.requestFullscreen) {
                 crosshairs.visible = true
+                $("body").classList.add('fullscreen')
                 app.desktopControls.disable()
                 app.playFullscreen()
                 setTimeout(()=>{
-                    fullscreenControls.enable()
+                    app.fullscreenControls.enable()
                 },100)
             } else {
                 $("body").classList.add('fullscreen')
