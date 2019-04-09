@@ -100,10 +100,16 @@ export class TouchControls extends ECSComp {
         this.attachButton = (b,dir) => {
             on(b,'touchstart',e => {
                 e.preventDefault()
+                e.stopPropagation()
                 this.dir_button = dir
+            })
+            on(b,'touchmove',e => {
+                e.preventDefault()
+                e.stopPropagation()
             })
             on(b,'touchend',e => {
                 e.preventDefault()
+                e.stopPropagation()
                 this.dir_button = DIRS.NONE
             })
             on(b,'mousedown',e => {
@@ -133,9 +139,9 @@ export class TouchControls extends ECSComp {
         console.log("turning on")
         super.enable()
         $("#touch-overlay").style.display = 'block'
-        this.canvas.addEventListener('touchstart',this.touchStart)
-        this.canvas.addEventListener('touchmove',this.touchMove)
-        this.canvas.addEventListener('touchend',this.touchEnd)
+        this.canvas.addEventListener('touchstart',this.touchStart,false)
+        this.canvas.addEventListener('touchmove',this.touchMove,false)
+        this.canvas.addEventListener('touchend',this.touchEnd,false)
     }
     disable() {
         if(!this.isEnabled()) return //don't recurse if already disabled

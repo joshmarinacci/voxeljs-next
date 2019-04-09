@@ -43,18 +43,6 @@
     </div>
     <button id="fullscreen">play full screen</button>
     <button id="entervr">play in vr</button>
-<!--    <div class="button-bar">-->
-<!--        <button id="save">save</button>-->
-<!--        <button id="reload">reload</button>-->
-<!--    </div>-->
-<!--    <div class="button-bar">-->
-<!--        <button id="use-greedy-mesher" class="selected mesher">greedy mesher</button>-->
-<!--        <button id="use-culled-mesher" class="mesher">culled mesher</button>-->
-<!--        <button id="toggle-texture" class="selected">textures</button>-->
-<!--        <button id="toggle-ao" class="selected">shadows</button>-->
-<!--        <button id="connect-voice">voice</button>-->
-<!--        <button id="share">shared playing</button>-->
-<!--    </div>-->
 </div>
 <div id="container">
     <div id="touch-overlay">
@@ -67,25 +55,6 @@
         <button id="jump-button">jump</button>
     </div>
 </div>
-
-
-<!--<ul>-->
-
-
-
-
-<!--    <li>full screen: mouse to move camera, arrows and WASD to move</li>-->
-<!--    <li>window mode: mouse to click on things, arrows to turn, WASD to move</li>-->
-<!--    <li>VR mode: <ul>-->
-<!--        <li>trigger to click</li>-->
-<!--        <li>hold 'up' butotn to move in direction of pointer</li>-->
-<!--        <li>swipe left and right to rotate camera</li>-->
-<!--        <li>click left to toggle create vs destroy</li>-->
-<!--        <li>click right to open block settings</li>-->
-<!--    </ul>-->
-<!--    <li>voice: turn on voice to talk to others playing the game</li>-->
-<!--    <li>toggle active vs creative mode with the 'c' key</li>-->
-<!--</ul>-->
 
 <script src="../node_modules/atlaspack/index.js"></script>
 <script type="module">
@@ -373,15 +342,6 @@
         on(app.fullscreenControls,'highlight', app.moveHighlight)
         on(app.fullscreenControls,'setblock', app.createBlock)
         on(app.fullscreenControls,'removeblock',app.removeBlock)
-        /*
-        on(app.fullscreenControls,'exit',()=>{
-            console.log("exiting here")
-            $("#touch-overlay").style.visibility = 'hidden'
-            $("body").classList.remove('fullscreen')
-            app.fullscreenControls.disable()
-            app.desktopControls.enable()
-        })
-         */
 
         // on click, if fullscreen support, then really enter fullscreen, else fake it with CSS
         on($("#fullscreen"),'click',()=> {
@@ -424,10 +384,40 @@
         on(app.touchControls,'setblock', app.createBlock)
         on(app.touchControls,'removeblock',app.removeBlock)
         app.touchControls.enable()
-        on($("#menu-button"),'click',()=> app.toggleDialog())
-        on($("#jump-button"),'mousedown',()=>  app.player_phys.startJump())
-        on($("#jump-button"),'mouseup',()=> app.player_phys.endJump())
-        on($('#exit-fullscreen'),'click',()=>app.exitFullscreen())
+        function setupTouchButton(sel,cb) {
+            on($(sel),'touchstart',e => {
+                e.preventDefault()
+                e.stopPropagation()
+            })
+            on($(sel),'touchmove',e => {
+                e.preventDefault()
+                e.stopPropagation()
+            })
+            on($(sel),'touchend',e => {
+                e.preventDefault()
+                e.stopPropagation()
+                cb()
+            })
+        }
+        setupTouchButton("#menu-button",()=>app.toggleDialog())
+
+        on($("#jump-button"),'touchstart',(e)=> {
+            e.preventDefault()
+            e.stopPropagation()
+            app.player_phys.startJump()
+        })
+        on($("#jump-button"),'touchmove',(e)=> {
+            e.preventDefault()
+            e.stopPropagation()
+        })
+        on($("#jump-button"),'touchend',(e)=> {
+            e.preventDefault()
+            e.stopPropagation()
+            app.player_phys.endJump()
+        })
+
+
+        setupTouchButton('#exit-fullscreen',()=>app.exitFullscreen())
 
 
         // things to do on every render tick
