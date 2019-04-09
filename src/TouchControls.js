@@ -10,7 +10,7 @@ export class TouchControls extends ECSComp {
     constructor(app, distance, chunkManager) {
         super()
         this.app = app
-        this.canvas = this.app.renderer.domElement
+        this.canvas = this.app.container
         this.distance = distance
         this.chunkManager = chunkManager
 
