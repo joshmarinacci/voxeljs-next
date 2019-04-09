@@ -22,6 +22,6 @@
     "three": "^0.102.1",
     "threejs-2d-components": "0.0.4",
     "webrtc-sdk": "^2.2.5",
-    "webxr-boilerplate": "^0.2.1-b"
+    "webxr-boilerplate": "^0.2.1"
   }
 }
