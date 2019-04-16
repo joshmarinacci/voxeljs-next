@@ -137,7 +137,7 @@
         // ========== setup the chunk manager and cache
         app.chunkManager = new ChunkManager({
             chunkDistance:1,
-            // cubeSize:1,
+            blockSize:1,
             mesher: new CulledMesher(),
             chunkSize:16,
             generateVoxelChunk: (low, high, pos) => {
@@ -172,11 +172,6 @@
             pos.floor()
             //set the actual value
             this.chunkManager.setVoxelAtCoordinates(pos, value)
-
-            // update the chunk
-            const chunkIndex = this.chunkManager.chunkIndexAtCoordinates(pos.x,pos.y,pos.z)
-            const chunk = this.chunkManager.chunks[chunkIndex.join("|")]
-            if(chunk) this.chunkManager.rebuildMesh(chunk)
         }
 
 
@@ -190,9 +185,6 @@
         app.stagePos.position.x = 0
 
         app.stagePos.add(app.chunkManager.container)
-
-        const SCALE = new Vector3(1.0,1.0,1.0)
-
 
 
         // ======== EVENT HANDLERS ==========

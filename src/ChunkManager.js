@@ -50,7 +50,7 @@ export class ChunkManager {
         this.container = opts.container
         this.distance = opts.chunkDistance || 2
         this.chunkSize = opts.chunkSize || 32
-        this.cubeSize = opts.cubeSize || 1
+        this.blockSize = opts.blockSize || 1
         this.generateVoxelChunk = opts.generateVoxelChunk
         this.chunks = {}
         this.mesher = opts.mesher || new CulledMesher()
@@ -161,7 +161,7 @@ export class ChunkManager {
 
     //position in world coords
     chunkAtPosition(position) {
-        const pt = position.divideScalar(this.cubeSize).floor()
+        const pt = position.divideScalar(this.blockSize).floor()
         return this.chunkIndexAtCoordinates(pt.x, pt.y, pt.z)
     }
 
@@ -183,12 +183,14 @@ export class ChunkManager {
         const ckey = this.chunkIndexAtCoordinates(pt.x, pt.y, pt.z).join('|')
         const chunk = this.chunks[ckey]
         if (!chunk) return false
-        return chunk.setVoxelAtCoordinates(pt,val)
+        const ret = chunk.setVoxelAtCoordinates(pt,val)
+        this.rebuildMesh(chunk)
+        return ret
     }
 
     //get voxel at position in world coordinates
     voxelAtPosition(pos, val) {
-        return this.voxelAtCoordinates(pos.divideScalar(this.cubeSize).floor(),val)
+        return this.voxelAtCoordinates(pos.divideScalar(this.blockSize).floor(),val)
     }
 
     //report the number of chunks currently loaded into memory
