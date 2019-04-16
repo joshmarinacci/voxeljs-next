@@ -65,6 +65,7 @@ export class ChunkManager {
         for (let size = this.chunkSize; size > 0; size >>= 1) bits++;
         this.chunkBits = bits - 1;
         this.app = app
+        this.CHUNK_CACHE = {}
     }
 
     on(type, cb) {
@@ -123,7 +124,13 @@ export class ChunkManager {
     //make a chunk at the position in chunk coords
     generateChunk(pos) {
         const bounds = this.getBounds(pos.x, pos.y, pos.z)
-        const chunkData = this.generateVoxelChunk(bounds[0], bounds[1], pos)
+        const id = [pos.x,pos.y,pos.z].join('|')
+        let chunkData
+        if(this.CHUNK_CACHE[id]) {
+            chunkData = this.CHUNK_CACHE[id]
+        } else {
+            chunkData = this.generateVoxelChunk(bounds[0], bounds[1], pos)
+        }
         const chunkObj = new Chunk(chunkData, pos, this.chunkBits)
         this.chunks[chunkObj.id] = chunkObj
         return chunkObj

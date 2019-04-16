@@ -135,15 +135,13 @@
         }
 
         // ========== setup the chunk manager and cache
-        app.CHUNK_CACHE = {}
         app.chunkManager = new ChunkManager({
-            // chunkDistance:3,
+            chunkDistance:1,
             // cubeSize:1,
             mesher: new CulledMesher(),
             chunkSize:16,
             generateVoxelChunk: (low, high, pos) => {
                 const id = [pos.x,pos.y,pos.z].join('|')
-                if(app.CHUNK_CACHE[id]) return app.CHUNK_CACHE[id]
                 return generateChunkInfoFromFunction(low, high, flat)
             },
             container: new Group(),
@@ -165,7 +163,7 @@
         app.chunkManager.on('removingChunk',(chunk) => {
             app.chunkManager.container.remove(chunk.surfaceMesh)
             chunk.surfaceMesh.geometry.dispose()
-            app.CHUNK_CACHE[chunk.id] = chunk.data
+            app.chunkManager.CHUNK_CACHE[chunk.id] = chunk.data
         })
 
         // create a block with the currently selected block type
