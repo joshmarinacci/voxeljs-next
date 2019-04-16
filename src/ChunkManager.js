@@ -45,7 +45,7 @@ class Chunk {
 const SCALE = new Vector3(1.0,1.0,1.0)
 
 export class ChunkManager {
-    constructor(opts, app) {
+    constructor(opts) {
         this.listeners = {}
         this.container = opts.container
         this.distance = opts.chunkDistance || 2
@@ -54,9 +54,12 @@ export class ChunkManager {
         this.generateVoxelChunk = opts.generateVoxelChunk
         this.chunks = {}
         this.mesher = opts.mesher || new CulledMesher()
+        this.textureManager = opts.textureManager
 
         if (this.chunkSize & this.chunkSize - 1 !== 0)
             throw new Error('chunkSize must be a power of 2')
+        if (!this.textureManager)
+            throw new Error("missing texture manager")
 
         //TODO: count the number of bits wide the chunksize is. seems like we could just use Math.log()
         //ex: if chunksize is 16 the bits is 4
@@ -64,7 +67,6 @@ export class ChunkManager {
         let bits = 0
         for (let size = this.chunkSize; size > 0; size >>= 1) bits++;
         this.chunkBits = bits - 1;
-        this.app = app
         this.CHUNK_CACHE = {}
     }
 
@@ -225,8 +227,8 @@ export class ChunkManager {
 
     rebuildMesh(chunk) {
         if(chunk.surfaceMesh) this.container.remove(chunk.surfaceMesh)
-        chunk.surfaceMesh = new VoxelMesh(chunk, this.mesher, SCALE, this.app)
-            .createSurfaceMesh(this.app.textureManager.material)
+        chunk.surfaceMesh = new VoxelMesh(chunk, this.mesher, SCALE, this)
+            .createSurfaceMesh(this.textureManager.material)
         this.container.add(chunk.surfaceMesh)
         const pos = chunk.realPosition.clone().multiplyScalar(this.chunkSize)
         chunk.surfaceMesh.position.copy(pos)

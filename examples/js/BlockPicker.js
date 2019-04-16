@@ -24,7 +24,7 @@ class BlockTypeButton extends Button2D {
         ctx.fillStyle = 'red'
         ctx.fillRect(this.x,this.y,64,64)
         let info = this.info
-        ctx.drawImage(this.owner.app.textureManager.canvas,
+        ctx.drawImage(this.owner.app.chunkManager.textureManager.canvas,
             info.x,info.y,info.w,info.h,
             this.x,this.y,64,64
         )
@@ -54,7 +54,7 @@ export class BlockPicker {
     rebuild() {
         this.panel.removeAll()
         this.panel.add(new Label2D().set('text','block type').set('x',20).set('y',0))
-        const index = this.app.textureManager.getAtlasIndex()
+        const index = this.app.chunkManager.textureManager.getAtlasIndex()
         index.forEach((info,i) => {
             const button = new BlockTypeButton().setAll({
                 text:info.name,
@@ -67,7 +67,7 @@ export class BlockPicker {
             },info.name)
             on(button,'click',()=>{
                 console.log("selected block", info.name)
-                const infos = this.app.textureManager.getAtlasIndex()
+                const infos = this.app.chunkManager.textureManager.getAtlasIndex()
                 if(infos[i]) {
                     this.selectedColor = infos[i].name
                     this.panel.redraw()
@@ -100,7 +100,7 @@ export class BlockPicker {
     }
 
     setSelectedToDefault() {
-        const index = this.app.textureManager.getAtlasIndex()
+        const index = this.app.chunkManager.textureManager.getAtlasIndex()
         this.selectedColor = index[0].name
     }
     /*

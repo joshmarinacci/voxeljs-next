@@ -9,8 +9,9 @@ import {
 const createAtlas = window.atlaspack
 
 export class TextureManager {
-    constructor() {
+    constructor(opts) {
         this.canvas = document.createElement('canvas')
+        this.aoEnabled = opts.aoEnabled || false
         this.canvas.width = 128;
         this.canvas.height = 128;
         this.atlas = createAtlas(this.canvas);

@@ -106,15 +106,6 @@
         app.comps.push(app.player_phys)
         app.player_phys.enable()
 
-        app.textureManager = new TextureManager()
-        app.comps.push(app.textureManager)
-        //start loading these textures
-        app.textureManager.load(['grass','brick','dirt','anim','tnt','arrows']).then(()=>{
-            app.textureManager.markAsAnimated('anim')
-            app.chunkManager.rebuildAllMeshes()
-            app.chunkManager.requestMissingChunks(new Vector3(0,0,0))
-            app.dialog.setSelectedToDefault()
-        })
 
 
         // function to generate a flat world
@@ -145,8 +136,17 @@
                 return generateChunkInfoFromFunction(low, high, flat)
             },
             container: new Group(),
+            textureManager: new TextureManager({aoEnabled:true}),
         },app);
 
+        app.comps.push(app.chunkManager.textureManager)
+        //start loading these textures
+        app.chunkManager.textureManager.load(['grass','brick','dirt','anim','tnt','arrows']).then(()=>{
+            app.chunkManager.textureManager.markAsAnimated('anim')
+            app.chunkManager.rebuildAllMeshes()
+            app.chunkManager.requestMissingChunks(new Vector3(0,0,0))
+            app.dialog.setSelectedToDefault()
+        })
 
         // ======== setup chunk manipulation functions =======
 
@@ -157,7 +157,7 @@
         // create a block with the currently selected block type
         app.createBlock = (pos) => {
             if(app.dialog.panel.visible) return
-            app.setBlock(pos, app.textureManager.getBlockTypeForName(app.dialog.selectedColor))
+            app.setBlock(pos, app.chunkManager.textureManager.getBlockTypeForName(app.dialog.selectedColor))
         }
 
         // remove a block at the position

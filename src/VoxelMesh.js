@@ -67,7 +67,7 @@ function generateGrid(chunkManager,pos,indexes,vertices) {
 }
 
 export class VoxelMesh {
-    constructor(chunk, mesher, scaleFactor, app) {
+    constructor(chunk, mesher, scaleFactor, chunkManager) {
         this.data = chunk
         const geometry = this.geometry = new BufferGeometry()
         this.scale = scaleFactor || new Vector3(10, 10, 10)
@@ -103,12 +103,11 @@ export class VoxelMesh {
         */
 
         const chunkOffset = chunk.realPosition.clone().multiplyScalar(16)
-        const chunkManager = app.chunkManager
 
         for (let i = 0; i < result.faces.length; ++i) {
             let q = result.faces[i]
-            const info = app.textureManager.lookupInfoForBlockType(q[4])
-            const realUVs = app.textureManager.lookupUVsForBlockType(q[4])
+            const info = chunkManager.textureManager.lookupInfoForBlockType(q[4])
+            const realUVs = chunkManager.textureManager.lookupUVsForBlockType(q[4])
             const a = q[0]
             const b = q[1]
             const c = q[2]
@@ -225,7 +224,7 @@ export class VoxelMesh {
                 }
             }
 
-            if(app.aoEnabled) {
+            if(chunkManager.textureManager.aoEnabled) {
                 const grid = generateGrid(chunkManager,pos,q,result.vertices)
                 ao = generateAmbientOcclusion(grid)
                 occlusion.push(ao[0], ao[1], ao[2], ao[3])
