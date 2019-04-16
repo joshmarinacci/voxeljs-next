@@ -199,24 +199,6 @@
         crosshairs.visible = false
 
 
-        //check every frame if the player has moved.
-        // if so add and remove any needed chunks
-        let lastPos = new Vector3(0,0,0)
-        app.updateChunks = function() {
-            //if the player has moved
-            if(!lastPos.equals(this.stagePos.position)) {
-                //request missing chunks
-                const startTime = Date.now()
-                const pos = app.stagePos.position.clone().multiplyScalar(-1)
-                app.chunkManager.requestMissingChunks(pos)
-                // and remove the chunks that might be out of range now
-                app.chunkManager.removeFarChunks(pos, app.chunkManager.container)
-                const endTime = Date.now()
-                const diff = endTime - startTime
-                if(diff > 5)  console.log("meshing time",diff)
-            }
-            lastPos.copy(app.stagePos.position)
-        }
 
 
         /// ============= Highlight Object ==========
@@ -369,11 +351,17 @@
 
         // things to do on every render tick
         // this is the render loop
-        let last = 0
+        let lastTime = 0
+        let lastPos = new Vector3(0,0,0)
         app.onRender((time, app)=> {
-            const dt = time-last
-            last = time
-            app.updateChunks()
+            const dt = time-lastTime
+            lastTime = time
+            //check every frame if the player has moved.
+            // if so tell the chunk manager to update any needed chunks
+            if(!lastPos.equals(this.stagePos.position)) {
+                app.chunkManager.updateCenterPosition(app.stagePos.position.clone().multiplyScalar(-1))
+            }
+            lastPos.copy(app.stagePos.position)
             app.comps.forEach(comp => {
                 if(comp.isEnabled()) comp.update(time,dt)
             })

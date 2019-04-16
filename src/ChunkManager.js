@@ -236,5 +236,11 @@ export class ChunkManager {
     rebuildAllMeshes() {
         Object.keys(this.chunks).forEach(key => this.rebuildMesh(this.chunks[key]))
     }
+
+    updateCenterPosition(pos) {
+        this.requestMissingChunks(pos)
+        // and remove the chunks that might be out of range now
+        this.removeFarChunks(pos, this.container)
+    }
 }
 
