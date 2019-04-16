@@ -87,7 +87,7 @@
 
     app.init().then((app) => {
         // app.CHUNK_SIZE = 16
-        app.RAYCAST_DISTANCE = 30
+        // app.RAYCAST_DISTANCE = 30
         app.comps = []
         app.scene.background = new Color( 0xcccccc );
 
@@ -300,7 +300,7 @@
 
 
         // =========== setup the desktop controls ===========
-        app.desktopControls = new DesktopControls(app)
+        app.desktopControls = new DesktopControls(app,30)
         app.comps.push(app.desktopControls)
         on(app.desktopControls,'highlight',app.moveHighlight)
         on(app.desktopControls,'setblock',app.createBlock)

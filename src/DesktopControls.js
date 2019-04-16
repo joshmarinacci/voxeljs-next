@@ -8,10 +8,9 @@ const RIGHT_MOUSE_BUTTON = 2
 
 export class DesktopControls extends ECSComp {
 
-    constructor(app, distance, chunkManager) {
+    constructor(app, distance) {
         super()
         this.app = app
-        this.chunkManager = chunkManager
         this.distance = distance
         this.canvas = this.app.renderer.domElement
         this.canvas.addEventListener('contextmenu',e => {
