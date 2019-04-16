@@ -80,7 +80,9 @@ export class ChunkManager {
     clear() {
         Object.keys(this.chunks).forEach(key => {
             const chunk = this.chunks[key]
-            this.emit('removingChunk',chunk)
+            this.container.remove(chunk.surfaceMesh)
+            chunk.surfaceMesh.geometry.dispose()
+            this.CHUNK_CACHE[chunk.id] = chunk.data
             chunk.dispose()
         })
         this.chunks = {}
@@ -109,7 +111,7 @@ export class ChunkManager {
     requestMissingChunks(pos) {
         this.nearbyChunks(pos).map((chunkIndex) => {
             if (!this.chunks[chunkIndex.join('|')]) {
-                this.emit('missingChunk', chunkIndex)
+                this.rebuildMesh(this.generateChunk(new Vector3(chunkIndex[0],chunkIndex[1],chunkIndex[2])))
             }
         })
     }
@@ -207,7 +209,9 @@ export class ChunkManager {
 
             const chunk = this.chunks[chunkIndex]
             if (!chunk) return
-            this.emit('removingChunk',chunk)
+            this.container.remove(chunk.surfaceMesh)
+            chunk.surfaceMesh.geometry.dispose()
+            this.CHUNK_CACHE[chunk.id] = chunk.data
             chunk.dispose()
             delete this.chunks[chunkIndex]
         })

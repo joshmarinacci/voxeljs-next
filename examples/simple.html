@@ -154,18 +154,6 @@
         // app.mesher = new GreedyMesher()
         // app.mesher = new CulledMesher()
 
-        //if a chunk is missing, rebuild the mesh
-        app.chunkManager.on('missingChunk',(chunkId)=>{
-            app.chunkManager.rebuildMesh(app.chunkManager.generateChunk(new Vector3(chunkId[0],chunkId[1],chunkId[2])))
-        })
-
-        // when chunk removed, remove the mesh and data
-        app.chunkManager.on('removingChunk',(chunk) => {
-            app.chunkManager.container.remove(chunk.surfaceMesh)
-            chunk.surfaceMesh.geometry.dispose()
-            app.chunkManager.CHUNK_CACHE[chunk.id] = chunk.data
-        })
-
         // create a block with the currently selected block type
         app.createBlock = (pos) => {
             if(app.dialog.panel.visible) return
