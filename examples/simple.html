@@ -86,7 +86,7 @@
     })
 
     app.init().then((app) => {
-        app.CHUNK_SIZE = 16
+        // app.CHUNK_SIZE = 16
         app.RAYCAST_DISTANCE = 30
         app.comps = []
         app.scene.background = new Color( 0xcccccc );
@@ -139,27 +139,28 @@
         app.chunkManager = new ChunkManager({
             // chunkDistance:3,
             // cubeSize:1,
-            chunkSize:app.CHUNK_SIZE,
+            mesher: new CulledMesher(),
+            chunkSize:16,
             generateVoxelChunk: (low, high, pos) => {
                 const id = [pos.x,pos.y,pos.z].join('|')
                 if(app.CHUNK_CACHE[id]) return app.CHUNK_CACHE[id]
                 return generateChunkInfoFromFunction(low, high, flat)
             },
-        });
+        },app);
 
 
         // ======== setup chunk manipulation functions =======
 
         //set the mesher to use
         // app.mesher = new GreedyMesher()
-        app.mesher = new CulledMesher()
+        // app.mesher = new CulledMesher()
         // rebuild the mesh for a chunk
         app.rebuildMesh = (chunk) => {
             if(chunk.surfaceMesh) app.chunkGroup.remove(chunk.surfaceMesh)
-            chunk.surfaceMesh = new VoxelMesh(chunk, app.mesher, SCALE, app)
+            chunk.surfaceMesh = new VoxelMesh(chunk, app.chunkManager.mesher, SCALE, app)
                 .createSurfaceMesh(app.textureManager.material)
             app.chunkGroup.add(chunk.surfaceMesh)
-            const pos = chunk.realPosition.clone().multiplyScalar(app.CHUNK_SIZE)
+            const pos = chunk.realPosition.clone().multiplyScalar(app.chunkManager.chunkSize)
             chunk.surfaceMesh.position.copy(pos)
         }
 

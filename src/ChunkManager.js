@@ -1,4 +1,6 @@
 import {Vector3,} from "../node_modules/three/build/three.module.js"
+import {CulledMesher} from "../src/CulledMesher.js"
+import {VoxelMesh} from "../src/VoxelMesh.js"
 
 class Chunk {
     constructor(data, pos, chunkBits) {
@@ -41,13 +43,14 @@ class Chunk {
 }
 
 export class ChunkManager {
-    constructor(opts) {
+    constructor(opts, app) {
         this.listeners = {}
         this.distance = opts.chunkDistance || 2
         this.chunkSize = opts.chunkSize || 32
         this.cubeSize = opts.cubeSize || 1
         this.generateVoxelChunk = opts.generateVoxelChunk
         this.chunks = {}
+        this.mesher = opts.mesher || new CulledMesher()
 
         if (this.chunkSize & this.chunkSize - 1 !== 0)
             throw new Error('chunkSize must be a power of 2')
@@ -58,6 +61,7 @@ export class ChunkManager {
         let bits = 0
         for (let size = this.chunkSize; size > 0; size >>= 1) bits++;
         this.chunkBits = bits - 1;
+        this.app = app
     }
 
     on(type, cb) {
