@@ -47,6 +47,7 @@ const SCALE = new Vector3(1.0,1.0,1.0)
 export class ChunkManager {
     constructor(opts, app) {
         this.listeners = {}
+        this.container = opts.container
         this.distance = opts.chunkDistance || 2
         this.chunkSize = opts.chunkSize || 32
         this.cubeSize = opts.cubeSize || 1
@@ -210,10 +211,10 @@ export class ChunkManager {
     }
 
     rebuildMesh(chunk) {
-        if(chunk.surfaceMesh) this.app.chunkGroup.remove(chunk.surfaceMesh)
+        if(chunk.surfaceMesh) this.container.remove(chunk.surfaceMesh)
         chunk.surfaceMesh = new VoxelMesh(chunk, this.mesher, SCALE, this.app)
             .createSurfaceMesh(this.app.textureManager.material)
-        this.app.chunkGroup.add(chunk.surfaceMesh)
+        this.container.add(chunk.surfaceMesh)
         const pos = chunk.realPosition.clone().multiplyScalar(this.chunkSize)
         chunk.surfaceMesh.position.copy(pos)
     }

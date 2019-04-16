@@ -146,6 +146,7 @@
                 if(app.CHUNK_CACHE[id]) return app.CHUNK_CACHE[id]
                 return generateChunkInfoFromFunction(low, high, flat)
             },
+            container: new Group(),
         },app);
 
 
@@ -162,7 +163,7 @@
 
         // when chunk removed, remove the mesh and data
         app.chunkManager.on('removingChunk',(chunk) => {
-            app.chunkGroup.remove(chunk.surfaceMesh)
+            app.chunkManager.container.remove(chunk.surfaceMesh)
             chunk.surfaceMesh.geometry.dispose()
             app.CHUNK_CACHE[chunk.id] = chunk.data
         })
@@ -202,8 +203,7 @@
         app.stagePos.position.y = -1.5
         app.stagePos.position.x = 0
 
-        app.chunkGroup = new Group()
-        app.stagePos.add(app.chunkGroup)
+        app.stagePos.add(app.chunkManager.container)
 
         const SCALE = new Vector3(1.0,1.0,1.0)
 
@@ -232,7 +232,7 @@
                 const pos = app.stagePos.position.clone().multiplyScalar(-1)
                 app.chunkManager.requestMissingChunks(pos)
                 // and remove the chunks that might be out of range now
-                app.chunkManager.removeFarChunks(pos, app.chunkGroup)
+                app.chunkManager.removeFarChunks(pos, app.chunkManager.container)
                 const endTime = Date.now()
                 const diff = endTime - startTime
                 if(diff > 5)  console.log("meshing time",diff)
