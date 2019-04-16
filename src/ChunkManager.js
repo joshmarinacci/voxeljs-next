@@ -42,6 +42,8 @@ class Chunk {
     }
 }
 
+const SCALE = new Vector3(1.0,1.0,1.0)
+
 export class ChunkManager {
     constructor(opts, app) {
         this.listeners = {}
@@ -205,6 +207,18 @@ export class ChunkManager {
 
     getBlock(x,y,z) {
         return this.voxelAtPosition(new Vector3(x,y,z))
+    }
+
+    rebuildMesh(chunk) {
+        if(chunk.surfaceMesh) this.app.chunkGroup.remove(chunk.surfaceMesh)
+        chunk.surfaceMesh = new VoxelMesh(chunk, this.mesher, SCALE, this.app)
+            .createSurfaceMesh(this.app.textureManager.material)
+        this.app.chunkGroup.add(chunk.surfaceMesh)
+        const pos = chunk.realPosition.clone().multiplyScalar(this.chunkSize)
+        chunk.surfaceMesh.position.copy(pos)
+    }
+    rebuildAllMeshes() {
+        Object.keys(this.chunks).forEach(key => this.rebuildMesh(this.chunks[key]))
     }
 }
 

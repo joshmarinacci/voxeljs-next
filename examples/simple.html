@@ -111,7 +111,7 @@
         //start loading these textures
         app.textureManager.load(['grass','brick','dirt','anim','tnt','arrows']).then(()=>{
             app.textureManager.markAsAnimated('anim')
-            app.rebuildAllMeshes()
+            app.chunkManager.rebuildAllMeshes()
             app.chunkManager.requestMissingChunks(new Vector3(0,0,0))
             app.dialog.setSelectedToDefault()
         })
@@ -154,24 +154,10 @@
         //set the mesher to use
         // app.mesher = new GreedyMesher()
         // app.mesher = new CulledMesher()
-        // rebuild the mesh for a chunk
-        app.rebuildMesh = (chunk) => {
-            if(chunk.surfaceMesh) app.chunkGroup.remove(chunk.surfaceMesh)
-            chunk.surfaceMesh = new VoxelMesh(chunk, app.chunkManager.mesher, SCALE, app)
-                .createSurfaceMesh(app.textureManager.material)
-            app.chunkGroup.add(chunk.surfaceMesh)
-            const pos = chunk.realPosition.clone().multiplyScalar(app.chunkManager.chunkSize)
-            chunk.surfaceMesh.position.copy(pos)
-        }
-
-        // rebuild all chunks in the cache
-        app.rebuildAllMeshes = () => {
-            Object.keys(app.chunkManager.chunks).forEach(key => app.rebuildMesh(app.chunkManager.chunks[key]))
-        }
 
         //if a chunk is missing, rebuild the mesh
         app.chunkManager.on('missingChunk',(chunkId)=>{
-            app.rebuildMesh(app.chunkManager.generateChunk(new Vector3(chunkId[0],chunkId[1],chunkId[2])))
+            app.chunkManager.rebuildMesh(app.chunkManager.generateChunk(new Vector3(chunkId[0],chunkId[1],chunkId[2])))
         })
 
         // when chunk removed, remove the mesh and data
@@ -203,7 +189,7 @@
             // update the chunk
             const chunkIndex = this.chunkManager.chunkIndexAtCoordinates(pos.x,pos.y,pos.z)
             const chunk = this.chunkManager.chunks[chunkIndex.join("|")]
-            if(chunk) this.rebuildMesh(chunk)
+            if(chunk) this.chunkManager.rebuildMesh(chunk)
         }
 
 
