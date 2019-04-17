@@ -204,7 +204,7 @@ export class ChunkManager {
                         pt.x = pos.x + x
                         pt.y = pos.y + y
                         pt.z = pos.z + z
-                        this.setVoxelAtCoordinates(pt, val)
+                        if(val !== -1) this.setVoxelAtCoordinates(pt, val)
                     }
                 }
             }
