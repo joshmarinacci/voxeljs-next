@@ -157,7 +157,27 @@
         // create a block with the currently selected block type
         app.createBlock = (pos) => {
             if(app.dialog.panel.visible) return
-            app.setBlock(pos, app.chunkManager.textureManager.getBlockTypeForName(app.dialog.selectedColor))
+            const name = app.dialog.selectedColor
+            if(name === 'tnt') {
+                // console.log("doing explosion carve out at",pos)
+                pos.y -= 1
+                pos.x -= 1
+                pos.z -= 1
+                const dim = new Vector3(3,3,3)
+                const data = [] //dim.x*dim.y*dim.z
+                for(let y=0; y<dim.y; y++) {
+                    for(let z=0; z<dim.z; z++) {
+                        for(let x=0; x<dim.x; x++) {
+                            const n = x + z*dim.x + y*dim.x*dim.z
+                            data[n] = 0
+                        }
+                    }
+                }
+                app.chunkManager.setBlockRange(pos,dim,data)
+            } else {
+                const type = app.chunkManager.textureManager.getBlockTypeForName(name)
+                app.setBlock(pos, type)
+            }
         }
 
         // remove a block at the position
@@ -358,7 +378,7 @@
             lastTime = time
             //check every frame if the player has moved.
             // if so tell the chunk manager to update any needed chunks
-            if(!lastPos.equals(this.stagePos.position)) {
+            if(!lastPos.equals(app.stagePos.position)) {
                 app.chunkManager.updateCenterPosition(app.stagePos.position.clone().multiplyScalar(-1))
             }
             lastPos.copy(app.stagePos.position)

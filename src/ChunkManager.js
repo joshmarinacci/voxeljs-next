@@ -190,6 +190,28 @@ export class ChunkManager {
         return ret
     }
 
+    setBlockRange(pos, dim, data) {
+        pos.floor()
+        const ckey = this.chunkIndexAtCoordinates(pos.x, pos.y, pos.z).join('|')
+        const chunk = this.chunks[ckey]
+        const pt = pos.clone()
+        if(chunk) {
+            for(let y=0; y<dim.y; y++) {
+                for(let z=0; z<dim.z; z++) {
+                    for(let x=0; x<dim.x; x++) {
+                        const n = x + z*dim.x + y*dim.x*dim.z
+                        const val = data[n]
+                        pt.x = pos.x + x
+                        pt.y = pos.y + y
+                        pt.z = pos.z + z
+                        this.setVoxelAtCoordinates(pt, val)
+                    }
+                }
+            }
+            this.rebuildMesh(chunk)
+        }
+    }
+
     //get voxel at position in world coordinates
     voxelAtPosition(pos, val) {
         return this.voxelAtCoordinates(pos.divideScalar(this.blockSize).floor(),val)
