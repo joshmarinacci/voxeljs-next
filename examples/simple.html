@@ -141,7 +141,7 @@
 
         app.comps.push(app.chunkManager.textureManager)
         //start loading these textures
-        app.chunkManager.textureManager.load(['grass','brick','dirt','anim','tnt','arrows']).then(()=>{
+        app.chunkManager.textureManager.load(['grass','brick','dirt','anim','tnt','arrows','heart']).then(()=>{
             app.chunkManager.textureManager.markAsAnimated('anim')
             app.chunkManager.rebuildAllMeshes()
             app.chunkManager.requestMissingChunks(new Vector3(0,0,0))
