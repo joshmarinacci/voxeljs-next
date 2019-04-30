@@ -145,6 +145,31 @@ export class TextureManager {
         })
     }
 
+    loadTextures(infos) {
+        this.names = infos.map(info => info.src)
+        const proms = infos.map(info => {
+            return new Promise((res,rej)=>{
+                const img = new Image()
+                img.id = info.src
+                img.src = info.src
+                img.onload = () => {
+                    const node = this.atlas.pack(img)
+                    if(node === false) {
+                        this.atlas = this.atlas.expand(img)
+                    }
+                    res(img)
+                }
+                img.onerror = (e) => {
+                    console.error(`Couldn't load texture from url ${infos.src}`)
+                    rej(e)
+                }
+            })
+        })
+        return Promise.all(proms).then(()=>{
+            this.texture.needsUpdate = true
+        })
+    }
+
     markAsAnimated(name) {
         this.animated[name] = true
     }

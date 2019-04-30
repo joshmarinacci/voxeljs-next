@@ -36,6 +36,9 @@
     Or just play in regular windowed mode. Whatever you like.
 </p>
 
+<p>Textures CC0 licensed from <a href="https://www.kenney.nl/assets/voxel-pack">Kenney.nl</a>
+</p>
+
 <div>
     <div id="progress">
         <label>loading</label>
@@ -141,8 +144,32 @@
 
         app.comps.push(app.chunkManager.textureManager)
         //start loading these textures
-        app.chunkManager.textureManager.load(['grass','brick','dirt','anim','tnt','arrows','heart']).then(()=>{
-            app.chunkManager.textureManager.markAsAnimated('anim')
+        app.chunkManager.textureManager.loadTextures([
+            {
+                src:'./textures/kenneynl/tiles/grass_top.png'
+            },
+            {
+                src:'./textures/kenneynl/tiles/dirt.png'
+            },
+            {
+                src:'./textures/kenneynl/tiles/ice.png',
+            },
+            {
+                src:'./textures/kenneynl/tiles/lava.png',
+            },
+            {
+                src:'./textures/kenneynl/tiles/stone.png',
+            },
+            {
+                src:'./textures/kenneynl/tiles/sand.png',
+            },
+            {
+                src:'./textures/tnt.png',
+            },
+            {
+                src:'./textures/heart.png',
+            },
+        ]).then(()=>{
             app.chunkManager.rebuildAllMeshes()
             app.chunkManager.requestMissingChunks(new Vector3(0,0,0))
             app.dialog.setSelectedToDefault()
