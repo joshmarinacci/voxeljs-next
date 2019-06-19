@@ -288,10 +288,18 @@
             app.destroyBlockActive = !app.destroyBlockActive
             if(app.destroyBlockActive) {
                 app.highlight_cube.material.color.set(0xff0000)
-                app.vrControls.pointer.controller1.line.material.color.set(0x880000)
+                if(!app.vrControls.pointer.controller1.line) {
+                    console.log('warning. no line on controller1')
+                } else {
+                    app.vrControls.pointer.controller1.line.material.color.set(0x880000)
+                }
             } else {
                 app.highlight_cube.material.color.set(0x00ff00)
-                app.vrControls.pointer.controller1.line.material.color.set(0x008800)
+                if(!app.vrControls.pointer.controller1.line) {
+                    console.log('warning. no line on controller1')
+                } else {
+                    app.vrControls.pointer.controller1.line.material.color.set(0x008800)
+                }
             }
         }
 
