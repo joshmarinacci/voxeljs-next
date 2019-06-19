@@ -12,11 +12,10 @@ const TRIGGER = 'trigger'
 
 export class VRControls extends ECSComp {
 
-    constructor(app, distance, chunkManager) {
+    constructor(app) {
         super()
         this.app = app
-        // this.distance = distance
-        // this.chunkManager = chunkManager
+        this.distance = 30
         this.states = { touchpad: false}
         this.pointer = new Pointer(app,{
             //don't intersect with anything. only use for orientation and trigger state
@@ -43,7 +42,7 @@ export class VRControls extends ECSComp {
         const epilson = 1e-8
         const hitNormal = new Vector3(0,0,0)
         const hitPosition = new Vector3(0,0,0)
-        const hitBlock = traceRay(this.chunkManager,pos,direction,this.distance,hitPosition,hitNormal,epilson)
+        const hitBlock = traceRay(this.app.chunkManager,pos,direction,this.distance,hitPosition,hitNormal,epilson)
         return {
             hitBlock:hitBlock,
             hitPosition:hitPosition,

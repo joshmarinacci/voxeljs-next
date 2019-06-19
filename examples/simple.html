@@ -260,9 +260,8 @@
             }))
         app.highlight_cube.position.set(-2,0,-5)
         app.stagePos.add(app.highlight_cube)
-        app.moveHighlight = (res) => {
+        app.moveHighlight = (pos) => {
             if(app.dialog.panel.visible) return
-            const pos = res.hitPosition
             app.highlight_cube.position.copy(pos)
         }
 
@@ -289,10 +288,10 @@
             app.destroyBlockActive = !app.destroyBlockActive
             if(app.destroyBlockActive) {
                 app.highlight_cube.material.color.set(0xff0000)
-                vrControls.pointer.controller1.line.material.color.set(0x880000)
+                app.vrControls.pointer.controller1.line.material.color.set(0x880000)
             } else {
                 app.highlight_cube.material.color.set(0x00ff00)
-                vrControls.pointer.controller1.line.material.color.set(0x008800)
+                app.vrControls.pointer.controller1.line.material.color.set(0x008800)
             }
         }
 
@@ -430,7 +429,7 @@
             $("#entervr").style.display = 'block'
             on($("#entervr"),'click',()=> {
                 app.desktopControls.disable()
-                vrControls.enable()
+                app.vrControls.enable()
                 app.enterVR()
             })
         })
