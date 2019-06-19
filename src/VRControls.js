@@ -29,7 +29,7 @@ export class VRControls extends ECSComp {
             this._fire(TRIGGER,res)
         })
 
-        this.activeDir = DIRS.NONE
+        // this.activeDir = DIRS.NONE
     }
 
     traceRay() {
@@ -100,12 +100,47 @@ export class VRControls extends ECSComp {
     }
 
     updateGamepad(gamepad, time) {
-        const touchpad = gamepad.buttons[0]
+        // const touchpad = gamepad.buttons[0]
+        // console.log("axes", gamepad.axes[0], gamepad.axes[1])
+        if(!this.states[gamepad.id]) {
+            this.states[gamepad.id] = {}
+        }
 
+
+
+        let newDir = DIRS.NONE
+        console.log(gamepad.axes[1])
+        if(gamepad.axes[1] < -0.5) newDir = DIRS.UP
+        if(gamepad.axes[1] > +0.5) newDir = DIRS.DOWN
+        if(gamepad.axes[0] < -0.5) newDir = DIRS.LEFT
+        if(gamepad.axes[0] > +0.5) newDir = DIRS.RIGHT
+
+        let activeDir = this.states[gamepad.id]
+        if(!activeDir) activeDir = DIRS.NONE
+        if(activeDir === DIRS.NONE && newDir !== DIRS.NONE) {
+            if(newDir === DIRS.LEFT) {
+                this._fire('toggle-pointer',this)
+            }
+            if(newDir === DIRS.RIGHT) {
+                this._fire('show-dialog',this)
+            }
+        }
+        if(newDir === DIRS.UP) {
+            this.glideForward()
+        }
+        if(newDir === DIRS.DOWN) {
+            this.glideBackward()
+        }
+
+
+        activeDir = newDir
+        this.states[gamepad.id] = activeDir
+
+        // console.log("prev dir",this.activeDir)
         //on click start
-        if(touchpad.pressed === true && this.states.touchpad === false) {
-            if(gamepad.axes && gamepad.axes.length === 2) {
-                this.activeDir = DIRS.NONE
+        // if(/*touchpad.pressed === true &&*/ this.states.touchpad === false) {
+/*            if(gamepad.axes && gamepad.axes.length === 2) {
+                // this.activeDir = DIRS.NONE
                 if(gamepad.axes[1] < -0.2) this.activeDir = DIRS.UP
                 if(gamepad.axes[1] > +0.4) this.activeDir = DIRS.DOWN
 
@@ -113,9 +148,11 @@ export class VRControls extends ECSComp {
                     if(gamepad.axes[0] < -0.5) this.activeDir = DIRS.LEFT
                     if(gamepad.axes[0] > +0.5) this.activeDir = DIRS.RIGHT
                 }
-            }
-        }
+            }*/
+        // }
+        // console.log('new dir', this.activeDir)
 
+        /*
         //on click end
         //left and right clicks
         if(touchpad.pressed === false && this.states.touchpad === true) {
@@ -139,8 +176,9 @@ export class VRControls extends ECSComp {
                 // console.log("moving", this.activeDir)
                 this.glideBackward()
             }
-        }
+        }*/
 
+        /*
         //swipe detection
         if(!touchpad.pressed && gamepad.axes[0] < -0.5) {
             if(!this.startRight) {
@@ -171,8 +209,9 @@ export class VRControls extends ECSComp {
             this.startLeft = false
             this.startRight = false
         }
+         */
 
-        this.states.touchpad = touchpad.pressed
+        // this.states.touchpad = touchpad.pressed
 
     }
 }
