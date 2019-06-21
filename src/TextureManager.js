@@ -6,16 +6,30 @@ import {
     VertexColors
 } from "../node_modules/three/build/three.module.js"
 
-const createAtlas = window.atlaspack
+// const createAtlas = window.atlaspack
+
+/*
+
+* get what I have working w/o the atlas function
+* switch to 17 x 17 to address lines
+* manually create mip-maps as additional smaller textures
+
+* check out sample3D texture polyfill
+
+*/
+
+
 
 export class TextureManager {
     constructor(opts) {
         this.canvas = document.createElement('canvas')
+        document.getElementsByTagName('body')[0].appendChild(this.canvas)
         this.aoEnabled = opts.aoEnabled || false
         this.canvas.width = 128;
         this.canvas.height = 128;
-        this.atlas = createAtlas(this.canvas);
-        this.atlas.tilepad = false // this will cost 8x texture memory.
+        this.tiles = []
+        // this.atlas = createAtlas(this.canvas);
+        // this.atlas.tilepad = true // this will cost 8x texture memory.
         this.animated = {}
         const ctx = this.canvas.getContext('2d')
 
@@ -97,6 +111,26 @@ export class TextureManager {
         } );
     }
 
+    packImage(img) {
+        console.log("packing",img)
+        const info = {
+            index:this.tiles.length,
+            image:img,
+            x:0,
+            y:0,
+            w:16,
+            h:16,
+        }
+        info.x = (info.index*16)%128
+        info.y = Math.floor(info.index/8)*16
+        const ctx = this.canvas.getContext('2d')
+        ctx.drawImage(img,info.x,info.y, info.w,info.h)
+        this.tiles.push(info)
+        this.texture.needsUpdate = true
+    }
+
+
+
     isEnabled() {
         return true
     }
@@ -108,26 +142,42 @@ export class TextureManager {
     }
 
     lookupUVsForBlockType(typeNum) {
-        const uvs = this.atlas.uv()[this.names[typeNum-1]]
-        if(!uvs) return [[0,0],[0,1],[1,1],[1,0]]
-        return uvs
+        return [[0,0],[0,1],[1,1],[1,0]]
+        const info = this.tiles[typeNum]
+        const x = 1/8.0
+        const y = 0
+        const x2 = 2/8.0
+        const y2 = 1/8.0
+        // console.log(x)
+        return [[x,y],[x,y2],[x2,y2],[x2,y]]
+        // console.log("looking up type number",typeNum,info)
+        /*
+        return [
+            [info.x/128,info.y/128],
+            [info.x/128,(info.y+info.h)/128],
+            [(info.x+info.w)/128,(info.y)/128],
+            [(info.x+info.w)/128,(info.y+info.h)/128],
+        ]
+        */
+        // const uvs = this.atlas.uv()[this.names[typeNum-1]]
+        // if(!uvs) return [[0,0],[0,1],[1,1],[1,0]]
+        // return [[0.0,0],[0.0,1],[0,1],[1,0]]
+        // return uvs
     }
 
     lookupInfoForBlockType(typeNum) {
-        const index = this.getAtlasIndex()
-        const name = this.names[typeNum-1]
-        const found = index.find(info => info.name === name)
-        if(!found) return { animated:false }
-        return found
+        return {
+            animated:false
+        }
     }
 
-    getAtlasIndex() {
+    /*getAtlasIndex() {
         const index = this.atlas.index()
         index.forEach(info => {
             info.animated = this.animated[info.name]?true:false
         })
         return index
-    }
+    }*/
 
 
     getBlockTypeForName(name) {
@@ -153,10 +203,7 @@ export class TextureManager {
                 img.id = info.src
                 img.src = info.src
                 img.onload = () => {
-                    const node = this.atlas.pack(img)
-                    if(node === false) {
-                        this.atlas = this.atlas.expand(img)
-                    }
+                    this.packImage(img)
                     res(img)
                 }
                 img.onerror = (e) => {

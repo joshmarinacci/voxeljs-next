@@ -100,8 +100,8 @@ export class BlockPicker {
     }
 
     setSelectedToDefault() {
-        const index = this.app.chunkManager.textureManager.getAtlasIndex()
-        this.selectedColor = index[0].name
+        // const index = this.app.chunkManager.textureManager.getAtlasIndex()
+        // this.selectedColor = index[0].name
     }
     /*
     redraw() {
