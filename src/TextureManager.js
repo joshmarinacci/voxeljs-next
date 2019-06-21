@@ -23,10 +23,13 @@ import {
 export class TextureManager {
     constructor(opts) {
         this.canvas = document.createElement('canvas')
+        this.canvas.setAttribute('id','texture')
         document.getElementsByTagName('body')[0].appendChild(this.canvas)
         this.aoEnabled = opts.aoEnabled || false
         this.canvas.width = 128;
         this.canvas.height = 128;
+        this.canvas.style.width = '512px';
+        this.canvas.style.height = '512px';
         this.tiles = []
         // this.atlas = createAtlas(this.canvas);
         // this.atlas.tilepad = true // this will cost 8x texture memory.
@@ -34,24 +37,13 @@ export class TextureManager {
         const ctx = this.canvas.getContext('2d')
 
         this.texturesEnabled = true
-        ctx.fillStyle = 'red';
-        ctx.fillRect(0, 0, this.canvas.width/2, this.canvas.height/2);
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(this.canvas.width/2, this.canvas.height/2,this.canvas.width/2,this.canvas.height/2);
-        ctx.fillStyle = 'yellow'
-        ctx.fillRect(0, this.canvas.height/2,this.canvas.width/2,this.canvas.height/2);
-        ctx.fillStyle = 'green'
-        ctx.fillRect(this.canvas.width/2, 0,this.canvas.width/2,this.canvas.height/2);
-
-        ctx.fillStyle = 'purple';
-        ctx.fillRect(0+4, 0+4, this.canvas.width/2-8, this.canvas.height/2-8);
         ctx.fillStyle = 'red'
         ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
 
         this.texture = new Texture(this.canvas);
         this.texture.needsUpdate = true
         this.texture.magFilter = NearestFilter;
-        this.texture.minFilter = LinearMipMapLinearFilter;
+        this.texture.minFilter = NearestFilter;
         this.texturePath =  './textures/';
         this.material = new ShaderMaterial( {
             uniforms: {
@@ -99,10 +91,7 @@ export class TextureManager {
                     float cframe = mod(uTime,vFrameCount);
                     float cframe2 = floor(cframe); 
                     sr.x = sr.x + cframe2*sr.z;
-                    // fuv.x = sr.x + fract(vUv.x*vRepeat.x)*sr.z;
-                    fuv.x = sr.x + vUv.x*sr.z;
-                    // fuv.x = sr.x + fract(vUv.x*vRepeat.x+uTime)*sr.z;
-                    // fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;
+                    fuv.x = sr.x + fract(vUv.x*vRepeat.x)*sr.z;
                     fuv.y = sr.y + vUv.y*sr.w;
                     vec4 color = vec4(1.0,1.0,1.0,1.0);
                     if(texturesEnabled) {
@@ -125,9 +114,10 @@ export class TextureManager {
             w:16,
             h:16,
         }
-        info.x = (info.index*16)%128 + (info.index+1)*3
-        info.y = Math.floor(info.index/8)*16 + 3
+        info.x = (info.index*16)%128 + (info.index)*2 + 1
+        info.y = Math.floor(info.index/8)*16 + 1
         const ctx = this.canvas.getContext('2d')
+        ctx.imageSmoothingEnabled = false
         //draw image center
         ctx.drawImage(img,info.x,info.y, info.w, info.h)
         //left edge
