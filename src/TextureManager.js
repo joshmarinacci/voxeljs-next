@@ -45,6 +45,8 @@ export class TextureManager {
 
         ctx.fillStyle = 'purple';
         ctx.fillRect(0+4, 0+4, this.canvas.width/2-8, this.canvas.height/2-8);
+        ctx.fillStyle = 'red'
+        ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
 
         this.texture = new Texture(this.canvas);
         this.texture.needsUpdate = true
@@ -97,9 +99,11 @@ export class TextureManager {
                     float cframe = mod(uTime,vFrameCount);
                     float cframe2 = floor(cframe); 
                     sr.x = sr.x + cframe2*sr.z;
-                    fuv.x = sr.x + fract(vUv.x*vRepeat.x)*sr.z;
+                    // fuv.x = sr.x + fract(vUv.x*vRepeat.x)*sr.z;
+                    fuv.x = sr.x + vUv.x*sr.z;
                     // fuv.x = sr.x + fract(vUv.x*vRepeat.x+uTime)*sr.z;
-                    fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;   
+                    // fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;
+                    fuv.y = sr.y + vUv.y*sr.w;
                     vec4 color = vec4(1.0,1.0,1.0,1.0);
                     if(texturesEnabled) {
                         color = texture2D(texture, fuv);
@@ -121,10 +125,29 @@ export class TextureManager {
             w:16,
             h:16,
         }
-        info.x = (info.index*16)%128
-        info.y = Math.floor(info.index/8)*16
+        info.x = (info.index*16)%128 + (info.index+1)*3
+        info.y = Math.floor(info.index/8)*16 + 3
         const ctx = this.canvas.getContext('2d')
-        ctx.drawImage(img,info.x,info.y, info.w,info.h)
+        //draw image center
+        ctx.drawImage(img,info.x,info.y, info.w, info.h)
+        //left edge
+        ctx.drawImage(img,
+            0,0,1,info.h,
+            info.x-1,info.y,1,info.h)
+        //right edge
+        ctx.drawImage(img,
+            info.w-1,0,1,info.h,
+            info.x+info.w,info.y,1,info.h)
+        //top edge
+        ctx.drawImage(img,
+            0,0,info.w,1,
+            info.x,info.y-1,info.w,1)
+        ctx.drawImage(img,
+            0,info.h-1,info.w,1,
+            info.x,info.y+info.h,info.w,1)
+
+        ctx.fillStyle = 'yellow'
+        // ctx.fillRect(info.x,info.y,info.w,info.h)
         this.tiles.push(info)
         this.texture.needsUpdate = true
     }

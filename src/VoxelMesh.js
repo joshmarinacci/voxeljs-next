@@ -107,7 +107,7 @@ export class VoxelMesh {
             let q = result.faces[i]
             const info = chunkManager.textureManager.lookupInfoForBlockType(q[4])
             const realUVs = chunkManager.textureManager.lookupUVsForBlockType(q[4])
-            if(i==0) console.log(realUVs)
+            // if(i==0) console.log(realUVs)
             const a = q[0]
             const b = q[1]
             const c = q[2]
@@ -243,7 +243,7 @@ export class VoxelMesh {
                 w:realUVs[1][0] - realUVs[0][0],
                 h:realUVs[2][1] - realUVs[1][1],
             }
-            if(i===0) console.log(rect)
+            // if(i===0) console.log(rect)
             let fc = 1
             if(info.animated) {
                 fc = rect.w/rect.h
