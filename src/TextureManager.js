@@ -142,15 +142,21 @@ export class TextureManager {
     }
 
     lookupUVsForBlockType(typeNum) {
-        return [[0,0],[0,1],[1,1],[1,0]]
         const info = this.tiles[typeNum]
-        const x = 1/8.0
-        const y = 0
-        const x2 = 2/8.0
-        const y2 = 1/8.0
+        if(!info) {
+            const x = 0 / 8.0
+            const x2 = 1 / 8.0
+            const y = 0
+            const y2 = 1 / 8.0
+            return [[x, y], [x2, y], [x2, y2], [x, y2]]
+        }
         // console.log(x)
-        return [[x,y],[x,y2],[x2,y2],[x2,y]]
         // console.log("looking up type number",typeNum,info)
+        const x = info.x/128
+        const y = info.y/128
+        const x2 = (info.x+info.w)/128
+        const y2 = (info.y+info.h)/128
+        return [[x,y],[x2,y],[x2,y2],[x,y2]]
         /*
         return [
             [info.x/128,info.y/128],
@@ -158,7 +164,7 @@ export class TextureManager {
             [(info.x+info.w)/128,(info.y)/128],
             [(info.x+info.w)/128,(info.y+info.h)/128],
         ]
-        */
+         */
         // const uvs = this.atlas.uv()[this.names[typeNum-1]]
         // if(!uvs) return [[0,0],[0,1],[1,1],[1,0]]
         // return [[0.0,0],[0.0,1],[0,1],[1,0]]
