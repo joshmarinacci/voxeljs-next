@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style type="text/css">
+        html,body,canvas {
+            border: 0px solid black;
+            padding: 0;
+            margin:0;
+        }
+    </style>
+</head>
+<body>
+
+<script src="../node_modules/atlaspack/index.js"></script>
+<script src="https://raw.githack.com/mrdoob/three.js/r105/build/three.js"></script>
+<script type="module">
+    import {World, System} from "../node_modules/ecsy/build/ecsy.module.js"
+    import {ChunkManager} from '../src/ChunkManager'
+    import {CulledMesher} from '../src/CulledMesher'
+    import {TextureManager} from '../src/TextureManager'
+
+    class KeyboardState {
+        constructor() {
+            this.keyboardStates = {}
+
+            this.onKeyDown = (e) => {
+                this.keyboardStates[e.key] = true
+            }
+            this.onKeyUp = (e) => {
+                this.keyboardStates[e.key] = false
+            }
+
+            window.addEventListener("keydown", this.onKeyDown);
+            window.addEventListener("keyup", this.onKeyUp);
+        }
+        isPressed(key) {
+            if(this.keyboardStates[key] === true) return true
+            return false
+        }
+    }
+
+    class StandardThreeSceneSystem extends System {
+        init() {
+            this.scene = new THREE.Scene();
+            this.scene.background = new THREE.Color( 0xcccccc );
+            this.camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.005, 10000 );
+            this.camera.position.z = 5;
+            this.camera.position.y = 5;
+
+            var ambientLight = new THREE.AmbientLight( 0xcccccc );
+            this.scene.add( ambientLight );
+
+            const geometry = new THREE.IcosahedronGeometry( 1 )
+            const material = new THREE.MeshStandardMaterial({color: '#ff0'})
+            this.objMoving = new THREE.Mesh( geometry, material );
+            this.objMoving.position.set(0,0,0);
+
+            this.scene.add( this.objMoving );
+
+
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setClearColor( 0x333333 );
+            renderer.setPixelRatio( window.devicePixelRatio );
+            renderer.setSize( window.innerWidth, window.innerHeight );
+            document.body.appendChild( renderer.domElement );
+
+            const clock = new THREE.Clock();
+            function animate() {
+                const delta = clock.getDelta()
+                const elapsedTime = clock.elapsedTime
+                // console.time('render');
+                world.execute(delta, elapsedTime);
+                // console.timeEnd('render');
+                renderer.render( this.scene, this.camera );
+            }
+
+            renderer.setAnimationLoop(animate.bind(this));
+
+        }
+    }
+
+    const flat = (i,j,k) => {
+        //an gap in the floor made of air
+        // if(j <1 && k < -5 && k > -10 ) return 0
+        //the floor is brick, from depth 0 to -10
+        if(j < 1 && j > -10) return 1
+
+        //move back 10
+        k+=30
+        //a dome
+        if((i*i + j*j + k*k) < 80) {
+            return 2
+        }
+        //nothing else in the world
+        return 0
+    }
+    function generateChunkInfoFromFunction(l, h, f) {
+        let d = [ h[0]-l[0], h[1]-l[1], h[2]-l[2] ]
+        let v = new Int32Array(d[0]*d[1]*d[2])
+        let n = 0;
+        for(let k=l[2]; k<h[2]; ++k)
+            for(let j=l[1]; j<h[1]; ++j)
+                for(let i=l[0]; i<h[0]; ++i, ++n) {
+                    v[n] = f(i,j,k);
+                }
+        return {
+            low:l,
+            high:h,
+            voxels:v,
+            dims:d,
+        };
+    }
+
+    const chunkManager = new ChunkManager({
+        chunkDistance:3,
+        blockSize:1,
+        mesher: new CulledMesher(),
+        chunkSize:16,
+        generateVoxelChunk: (low, high, pos) => {
+            const id = [pos.x,pos.y,pos.z].join('|')
+            return generateChunkInfoFromFunction(low, high, flat)
+        },
+        container: new THREE.Group(),
+        textureManager: new TextureManager({aoEnabled:true}),
+    });
+
+
+
+    const world = new World();
+    world.registerSingletonComponent(KeyboardState)
+    world.registerSingletonComponent(StandardThreeSceneSystem)
+    class Stage {
+        constructor() {
+            this.position = new THREE.Group()
+            this.rotation = new THREE.Group()
+            this.rotation.add(this.position)
+        }
+    }
+    world.registerSingletonComponent(Stage)
+
+
+
+    class KeyboardNav extends System {
+        init() {
+            return {
+                queries: {
+                    camera: { components: [Stage]}
+                }
+            }
+        }
+        execute(delta) {
+            const speed = 10
+            let kb = this.world.components.keyboardState;
+            let stage = this.world.components.stage.position;
+            let rot = this.world.components.stage.rotation;
+            if(kb.isPressed('a'))  stage.position.x += +speed*delta
+            if(kb.isPressed('d'))  stage.position.x += -speed*delta
+            if(kb.isPressed('w'))  stage.position.z += +speed*delta
+            if(kb.isPressed('ArrowUp'))    stage.position.z += +speed*delta
+            if(kb.isPressed('s'))  stage.position.z += -speed*delta
+            if(kb.isPressed('ArrowDown'))  stage.position.z += -speed*delta
+
+            if(kb.isPressed('ArrowLeft'))  rot.rotation.y -= 0.03
+            if(kb.isPressed('ArrowRight')) rot.rotation.y += 0.03
+        }
+    }
+    world.registerSystem(KeyboardNav)
+
+    chunkManager.textureManager.loadTextures([
+        {
+            src:'./textures/kenneynl/tiles/grass_top.png'
+        },
+        {
+            src:'./textures/kenneynl/tiles/dirt.png'
+        },
+        {
+            src:'./textures/kenneynl/tiles/ice.png',
+        },
+        {
+            src:'./textures/kenneynl/tiles/lava.png',
+        },
+        {
+            src:'./textures/kenneynl/tiles/stone.png',
+        },
+        {
+            src:'./textures/kenneynl/tiles/sand.png',
+        },
+        {
+            src:'./textures/tnt.png',
+        },
+        {
+            src:'./textures/heart.png',
+        },
+    ]).then(()=>{
+        chunkManager.rebuildAllMeshes()
+        chunkManager.requestMissingChunks(new THREE.Vector3(0,0,0))
+        world.components.standardThreeSceneSystem.scene.add(world.components.stage.rotation)
+        world.components.stage.position.add(chunkManager.container)
+        // world.components.standardThreeSceneSystem.scene.add(chunkManager.container)
+    })
+
+</script>
+
+</body>
+</html>
+
