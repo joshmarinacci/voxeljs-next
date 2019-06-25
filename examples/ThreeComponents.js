@@ -7,9 +7,10 @@ export class ChunkManagerComponent {
 }
 export class StandardThreeSceneSystem extends System {
     init() {
+        this.canvas = document.querySelector("#canvas")
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color( 0xcccccc );
-        this.camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.005, 10000 );
+        this.camera = new THREE.PerspectiveCamera( 80, this.canvas.width / this.canvas.height, 0.005, 10000 );
         this.camera.position.z = 5;
         this.camera.position.y = 5;
 
@@ -24,11 +25,10 @@ export class StandardThreeSceneSystem extends System {
         this.scene.add( this.objMoving );
 
 
-        const renderer = new THREE.WebGLRenderer();
+        const renderer = new THREE.WebGLRenderer({canvas:this.canvas});
         renderer.setClearColor( 0x333333 );
-        renderer.setPixelRatio( window.devicePixelRatio );
-        renderer.setSize( window.innerWidth, window.innerHeight );
-        document.body.appendChild( renderer.domElement );
+        // renderer.setPixelRatio( window.devicePixelRatio );
+        renderer.setSize( this.canvas.width, this.canvas.height );
         this.renderer = renderer
 
         const clock = new THREE.Clock();

@@ -12,6 +12,8 @@
     </style>
 </head>
 <body>
+<button id="enter-fullscreen">fullscreen</button>
+<canvas id="canvas" width="400" height="250"></canvas>
 
 <script src="../node_modules/atlaspack/index.js"></script>
 <script src="https://raw.githack.com/mrdoob/three.js/r105/build/three.js"></script>
@@ -20,7 +22,7 @@
     import {ChunkManager} from '../src/ChunkManager'
     import {CulledMesher} from '../src/CulledMesher'
     import {TextureManager} from '../src/TextureManager'
-    import {KeyboardNav, KeyboardState, Stage, DesktopControls, Highlight} from './InputComponents'
+    import {KeyboardNav, KeyboardState, Stage, DesktopControls, Highlight, FullscreenControls} from './InputComponents'
     import {ChunkManagerComponent, StandardThreeSceneSystem} from './ThreeComponents'
 
     const flat = (i,j,k) => {
@@ -80,6 +82,7 @@
 
     world.registerSystem(KeyboardNav)
     world.registerSystem(DesktopControls)
+    world.registerSystem(FullscreenControls)
 
     //attach the highlight
     const highlight  = world.createEntity()
@@ -116,6 +119,17 @@
         chunkManager.requestMissingChunks(new THREE.Vector3(0,0,0))
         world.components.standardThreeSceneSystem.scene.add(world.components.stage.rotation)
         world.components.stage.position.add(chunkManager.container)
+    })
+
+    document.querySelector("#enter-fullscreen").addEventListener('click',()=>{
+        console.log("clicked to enter FS")
+        // world.getSystem(DesktopControls).disable()
+        const canvas = world.components.standardThreeSceneSystem.renderer.domElement
+        if(canvas.requestFullScreen !== null) {
+            canvas.requestFullscreen()
+        } else {
+            console.log("there is no fullscreen. we should fake it")
+        }
     })
 
 </script>

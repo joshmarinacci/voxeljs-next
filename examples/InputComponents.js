@@ -148,7 +148,6 @@ export class DesktopControls extends System {
             if (this.buttons === LEFT_MOUSE_BUTTON) {
                 const res = this.traceRayAtScreenCoords(this.pt)
                 res.hitPosition.add(res.hitNormal)
-                console.log("passed at", res.hitBlock)
                 // this._fire('setblock',res.hitPosition)
             }
             if (this.buttons === RIGHT_MOUSE_BUTTON) {
@@ -156,5 +155,52 @@ export class DesktopControls extends System {
                 // this._fire('removeblock',res.hitPosition)
             }
         }
+    }
+}
+
+export class FullscreenControls extends System {
+    init() {
+        console.log("setting up fullscreen controls")
+        const canvas = this.world.components.standardThreeSceneSystem.renderer.domElement
+        if (!canvas.requestFullscreen) {
+            if (canvas.webkitRequestFullscreen) {
+                canvas.requestFullscreen = canvas.webkitRequestFullScreen
+            }
+        }
+
+        this.changeCallback = () =>{
+            if(document.pointerLockElement) {
+                console.log("entered pointer lock")
+            } else {
+                console.log("exited pointer lock")
+            }
+        }
+        this.errorCallback = (e) => {
+            console.log("error getting pointer lock",e)
+        }
+
+        this.fullscreenchangeHandler = () => {
+            console.log("fullscreen change happeend")
+            if(document.fullscreenElement) {
+                // return this._fire(FULLSCREEN_ENTERED, this)
+                console.log("entered")
+                return
+            }
+            if(document.webkitFullscreenElement) {
+                return this._fire(FULLSCREEN_ENTERED, this)
+                console.log("entered")
+                return
+            }
+            console.log("exited")
+            // this._fire(FULLSCREEN_EXITED,this)
+        }
+        document.addEventListener('fullscreenchange',this.fullscreenchangeHandler)
+        document.addEventListener('webkitfullscreenchange',this.fullscreenchangeHandler)
+
+        // document.addEventListener('pointerlockchange',this.changeCallback,false)
+        // document.addEventListener('mousemove',this.moveCallback,false)
+        // document.addEventListener('pointerlockerror', this.errorCallback, false);
+        // document.addEventListener('mousedown',this.mousedownCallback,false)
+        // document.addEventListener('contextmenu',this.contextmenuCallback,false)
     }
 }
