@@ -20,66 +20,8 @@
     import {ChunkManager} from '../src/ChunkManager'
     import {CulledMesher} from '../src/CulledMesher'
     import {TextureManager} from '../src/TextureManager'
-
-    class KeyboardState {
-        constructor() {
-            this.keyboardStates = {}
-
-            this.onKeyDown = (e) => {
-                this.keyboardStates[e.key] = true
-            }
-            this.onKeyUp = (e) => {
-                this.keyboardStates[e.key] = false
-            }
-
-            window.addEventListener("keydown", this.onKeyDown);
-            window.addEventListener("keyup", this.onKeyUp);
-        }
-        isPressed(key) {
-            if(this.keyboardStates[key] === true) return true
-            return false
-        }
-    }
-
-    class StandardThreeSceneSystem extends System {
-        init() {
-            this.scene = new THREE.Scene();
-            this.scene.background = new THREE.Color( 0xcccccc );
-            this.camera = new THREE.PerspectiveCamera( 80, window.innerWidth / window.innerHeight, 0.005, 10000 );
-            this.camera.position.z = 5;
-            this.camera.position.y = 5;
-
-            var ambientLight = new THREE.AmbientLight( 0xcccccc );
-            this.scene.add( ambientLight );
-
-            const geometry = new THREE.IcosahedronGeometry( 1 )
-            const material = new THREE.MeshStandardMaterial({color: '#ff0'})
-            this.objMoving = new THREE.Mesh( geometry, material );
-            this.objMoving.position.set(0,0,0);
-
-            this.scene.add( this.objMoving );
-
-
-            const renderer = new THREE.WebGLRenderer();
-            renderer.setClearColor( 0x333333 );
-            renderer.setPixelRatio( window.devicePixelRatio );
-            renderer.setSize( window.innerWidth, window.innerHeight );
-            document.body.appendChild( renderer.domElement );
-
-            const clock = new THREE.Clock();
-            function animate() {
-                const delta = clock.getDelta()
-                const elapsedTime = clock.elapsedTime
-                // console.time('render');
-                world.execute(delta, elapsedTime);
-                // console.timeEnd('render');
-                renderer.render( this.scene, this.camera );
-            }
-
-            renderer.setAnimationLoop(animate.bind(this));
-
-        }
-    }
+    import {KeyboardNav, KeyboardState, Stage} from './InputComponents'
+    import {StandardThreeSceneSystem} from './ThreeComponents'
 
     const flat = (i,j,k) => {
         //an gap in the floor made of air
@@ -112,7 +54,6 @@
             dims:d,
         };
     }
-
     const chunkManager = new ChunkManager({
         chunkDistance:3,
         blockSize:1,
@@ -127,46 +68,12 @@
     });
 
 
-
     const world = new World();
     world.registerSingletonComponent(KeyboardState)
-    world.registerSingletonComponent(StandardThreeSceneSystem)
-    class Stage {
-        constructor() {
-            this.position = new THREE.Group()
-            this.rotation = new THREE.Group()
-            this.rotation.add(this.position)
-        }
-    }
     world.registerSingletonComponent(Stage)
-
-
-
-    class KeyboardNav extends System {
-        init() {
-            return {
-                queries: {
-                    camera: { components: [Stage]}
-                }
-            }
-        }
-        execute(delta) {
-            const speed = 10
-            let kb = this.world.components.keyboardState;
-            let stage = this.world.components.stage.position;
-            let rot = this.world.components.stage.rotation;
-            if(kb.isPressed('a'))  stage.position.x += +speed*delta
-            if(kb.isPressed('d'))  stage.position.x += -speed*delta
-            if(kb.isPressed('w'))  stage.position.z += +speed*delta
-            if(kb.isPressed('ArrowUp'))    stage.position.z += +speed*delta
-            if(kb.isPressed('s'))  stage.position.z += -speed*delta
-            if(kb.isPressed('ArrowDown'))  stage.position.z += -speed*delta
-
-            if(kb.isPressed('ArrowLeft'))  rot.rotation.y -= 0.03
-            if(kb.isPressed('ArrowRight')) rot.rotation.y += 0.03
-        }
-    }
     world.registerSystem(KeyboardNav)
+    world.registerSingletonComponent(StandardThreeSceneSystem)
+    world.components.standardThreeSceneSystem.world = world
 
     chunkManager.textureManager.loadTextures([
         {
@@ -198,7 +105,6 @@
         chunkManager.requestMissingChunks(new THREE.Vector3(0,0,0))
         world.components.standardThreeSceneSystem.scene.add(world.components.stage.rotation)
         world.components.stage.position.add(chunkManager.container)
-        // world.components.standardThreeSceneSystem.scene.add(chunkManager.container)
     })
 
 </script>
