@@ -20,8 +20,8 @@
     import {ChunkManager} from '../src/ChunkManager'
     import {CulledMesher} from '../src/CulledMesher'
     import {TextureManager} from '../src/TextureManager'
-    import {KeyboardNav, KeyboardState, Stage} from './InputComponents'
-    import {StandardThreeSceneSystem} from './ThreeComponents'
+    import {KeyboardNav, KeyboardState, Stage, DesktopControls, Highlight} from './InputComponents'
+    import {ChunkManagerComponent, StandardThreeSceneSystem} from './ThreeComponents'
 
     const flat = (i,j,k) => {
         //an gap in the floor made of air
@@ -54,6 +54,7 @@
             dims:d,
         };
     }
+
     const chunkManager = new ChunkManager({
         chunkDistance:3,
         blockSize:1,
@@ -69,11 +70,21 @@
 
 
     const world = new World();
-    world.registerSingletonComponent(KeyboardState)
-    world.registerSingletonComponent(Stage)
-    world.registerSystem(KeyboardNav)
     world.registerSingletonComponent(StandardThreeSceneSystem)
     world.components.standardThreeSceneSystem.world = world
+
+    world.registerSingletonComponent(KeyboardState)
+    world.registerSingletonComponent(Stage)
+    world.registerSingletonComponent(ChunkManagerComponent)
+    world.components.chunkManagerComponent.chunkManager = chunkManager
+
+    world.registerSystem(KeyboardNav)
+    world.registerSystem(DesktopControls)
+
+    //attach the highlight
+    const highlight  = world.createEntity()
+    highlight.addComponent(Highlight)
+    world.components.stage.position.add(highlight.getComponent(Highlight).mesh)
 
     chunkManager.textureManager.loadTextures([
         {

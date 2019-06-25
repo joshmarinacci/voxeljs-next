@@ -1,5 +1,10 @@
 import {System} from "../node_modules/ecsy/build/ecsy.module.js"
 
+export class ChunkManagerComponent {
+    constructor() {
+
+    }
+}
 export class StandardThreeSceneSystem extends System {
     init() {
         this.scene = new THREE.Scene();
@@ -24,6 +29,7 @@ export class StandardThreeSceneSystem extends System {
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize( window.innerWidth, window.innerHeight );
         document.body.appendChild( renderer.domElement );
+        this.renderer = renderer
 
         const clock = new THREE.Clock();
         function animate() {
