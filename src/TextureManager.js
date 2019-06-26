@@ -6,36 +6,44 @@ import {
     VertexColors
 } from "../node_modules/three/build/three.module.js"
 
-const createAtlas = window.atlaspack
+// const createAtlas = window.atlaspack
+
+/*
+
+* get what I have working w/o the atlas function
+* switch to 17 x 17 to address lines
+* manually create mip-maps as additional smaller textures
+
+* check out sample3D texture polyfill
+
+*/
+
+
 
 export class TextureManager {
     constructor(opts) {
         this.canvas = document.createElement('canvas')
+        this.canvas.setAttribute('id','texture')
+        document.getElementsByTagName('body')[0].appendChild(this.canvas)
         this.aoEnabled = opts.aoEnabled || false
         this.canvas.width = 128;
         this.canvas.height = 128;
-        this.atlas = createAtlas(this.canvas);
-        this.atlas.tilepad = false // this will cost 8x texture memory.
+        this.canvas.style.width = '512px';
+        this.canvas.style.height = '512px';
+        this.tiles = []
+        // this.atlas = createAtlas(this.canvas);
+        // this.atlas.tilepad = true // this will cost 8x texture memory.
         this.animated = {}
         const ctx = this.canvas.getContext('2d')
 
         this.texturesEnabled = true
-        ctx.fillStyle = 'red';
-        ctx.fillRect(0, 0, this.canvas.width/2, this.canvas.height/2);
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(this.canvas.width/2, this.canvas.height/2,this.canvas.width/2,this.canvas.height/2);
-        ctx.fillStyle = 'yellow'
-        ctx.fillRect(0, this.canvas.height/2,this.canvas.width/2,this.canvas.height/2);
-        ctx.fillStyle = 'green'
-        ctx.fillRect(this.canvas.width/2, 0,this.canvas.width/2,this.canvas.height/2);
-
-        ctx.fillStyle = 'purple';
-        ctx.fillRect(0+4, 0+4, this.canvas.width/2-8, this.canvas.height/2-8);
+        ctx.fillStyle = 'red'
+        ctx.fillRect(0,0,this.canvas.width,this.canvas.height)
 
         this.texture = new Texture(this.canvas);
         this.texture.needsUpdate = true
         this.texture.magFilter = NearestFilter;
-        this.texture.minFilter = LinearMipMapLinearFilter;
+        this.texture.minFilter = NearestFilter;
         this.texturePath =  './textures/';
         this.material = new ShaderMaterial( {
             uniforms: {
@@ -84,8 +92,7 @@ export class TextureManager {
                     float cframe2 = floor(cframe); 
                     sr.x = sr.x + cframe2*sr.z;
                     fuv.x = sr.x + fract(vUv.x*vRepeat.x)*sr.z;
-                    // fuv.x = sr.x + fract(vUv.x*vRepeat.x+uTime)*sr.z;
-                    fuv.y = sr.y + fract(vUv.y*vRepeat.y)*sr.w;   
+                    fuv.y = sr.y + vUv.y*sr.w;
                     vec4 color = vec4(1.0,1.0,1.0,1.0);
                     if(texturesEnabled) {
                         color = texture2D(texture, fuv);
@@ -96,6 +103,46 @@ export class TextureManager {
             `,
         } );
     }
+
+    packImage(img) {
+        console.log("packing",img)
+        const info = {
+            index:this.tiles.length,
+            image:img,
+            x:0,
+            y:0,
+            w:16,
+            h:16,
+        }
+        info.x = (info.index*16)%128 + (info.index)*2 + 1
+        info.y = Math.floor(info.index/8)*16 + 1
+        const ctx = this.canvas.getContext('2d')
+        ctx.imageSmoothingEnabled = false
+        //draw image center
+        ctx.drawImage(img,info.x,info.y, info.w, info.h)
+        //left edge
+        ctx.drawImage(img,
+            0,0,1,info.h,
+            info.x-1,info.y,1,info.h)
+        //right edge
+        ctx.drawImage(img,
+            info.w-1,0,1,info.h,
+            info.x+info.w,info.y,1,info.h)
+        //top edge
+        ctx.drawImage(img,
+            0,0,info.w,1,
+            info.x,info.y-1,info.w,1)
+        ctx.drawImage(img,
+            0,info.h-1,info.w,1,
+            info.x,info.y+info.h,info.w,1)
+
+        ctx.fillStyle = 'yellow'
+        // ctx.fillRect(info.x,info.y,info.w,info.h)
+        this.tiles.push(info)
+        this.texture.needsUpdate = true
+    }
+
+
 
     isEnabled() {
         return true
@@ -108,26 +155,48 @@ export class TextureManager {
     }
 
     lookupUVsForBlockType(typeNum) {
-        const uvs = this.atlas.uv()[this.names[typeNum-1]]
-        if(!uvs) return [[0,0],[0,1],[1,1],[1,0]]
-        return uvs
+        const info = this.tiles[typeNum]
+        if(!info) {
+            const x = 0 / 8.0
+            const x2 = 1 / 8.0
+            const y = 0
+            const y2 = 1 / 8.0
+            return [[x, y], [x2, y], [x2, y2], [x, y2]]
+        }
+        // console.log(x)
+        // console.log("looking up type number",typeNum,info)
+        const x = info.x/128
+        const y = info.y/128
+        const x2 = (info.x+info.w)/128
+        const y2 = (info.y+info.h)/128
+        return [[x,y],[x2,y],[x2,y2],[x,y2]]
+        /*
+        return [
+            [info.x/128,info.y/128],
+            [info.x/128,(info.y+info.h)/128],
+            [(info.x+info.w)/128,(info.y)/128],
+            [(info.x+info.w)/128,(info.y+info.h)/128],
+        ]
+         */
+        // const uvs = this.atlas.uv()[this.names[typeNum-1]]
+        // if(!uvs) return [[0,0],[0,1],[1,1],[1,0]]
+        // return [[0.0,0],[0.0,1],[0,1],[1,0]]
+        // return uvs
     }
 
     lookupInfoForBlockType(typeNum) {
-        const index = this.getAtlasIndex()
-        const name = this.names[typeNum-1]
-        const found = index.find(info => info.name === name)
-        if(!found) return { animated:false }
-        return found
+        return {
+            animated:false
+        }
     }
 
-    getAtlasIndex() {
+    /*getAtlasIndex() {
         const index = this.atlas.index()
         index.forEach(info => {
             info.animated = this.animated[info.name]?true:false
         })
         return index
-    }
+    }*/
 
 
     getBlockTypeForName(name) {
@@ -153,10 +222,7 @@ export class TextureManager {
                 img.id = info.src
                 img.src = info.src
                 img.onload = () => {
-                    const node = this.atlas.pack(img)
-                    if(node === false) {
-                        this.atlas = this.atlas.expand(img)
-                    }
+                    this.packImage(img)
                     res(img)
                 }
                 img.onerror = (e) => {

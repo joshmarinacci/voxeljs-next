@@ -27,6 +27,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="stylesheet" href="css/main.css">
+    <style>
+        #texture {
+            border: 0 solid green;
+            image-rendering: -moz-crisp-edges;
+        }
+    </style>
 </head>
 <body>
 
@@ -127,10 +133,14 @@
             //nothing else in the world
             return 0
         }
+        const wide_block = (i,j,k) => {
+            if(i>=-4 && i<0 && j===1 && k===6) return 1
+            return 0
+        }
 
         // ========== setup the chunk manager and cache
         app.chunkManager = new ChunkManager({
-            chunkDistance:3,
+            chunkDistance:1,
             blockSize:1,
             mesher: new CulledMesher(),
             chunkSize:16,
