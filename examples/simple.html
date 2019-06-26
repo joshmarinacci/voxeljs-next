@@ -125,7 +125,7 @@
             if(j < 1 && j > -10) return 1
 
             //move back 10
-            k+=30
+            k+=20
             //a dome
             if((i*i + j*j + k*k) < 80) {
                 return 2
@@ -161,9 +161,9 @@
             {
                 src:'./textures/kenneynl/tiles/dirt.png'
             },
-            {
-                src:'./textures/kenneynl/tiles/ice.png',
-            },
+            // {
+            //     src:'./textures/kenneynl/tiles/ice.png',
+            // },
             {
                 src:'./textures/kenneynl/tiles/lava.png',
             },
@@ -178,6 +178,9 @@
             },
             {
                 src:'./textures/heart.png',
+            },
+            {
+                src:'./textures/tnt.png',
             },
         ]).then(()=>{
             app.chunkManager.rebuildAllMeshes()

@@ -104,9 +104,9 @@ export class TextureManager {
         } );
     }
 
-    packImage(img) {
+    packImage(img,index) {
         const info = {
-            index:this.tiles.length,
+            index:index,
             image:img,
             x:0,
             y:0,
@@ -137,8 +137,8 @@ export class TextureManager {
 
         ctx.fillStyle = 'yellow'
         // ctx.fillRect(info.x,info.y,info.w,info.h)
-        this.tiles.push(info)
         this.texture.needsUpdate = true
+        return info
     }
 
 
@@ -189,39 +189,22 @@ export class TextureManager {
         }
     }
 
-    /*getAtlasIndex() {
-        const index = this.atlas.index()
-        index.forEach(info => {
-            info.animated = this.animated[info.name]?true:false
-        })
-        return index
-    }*/
-
 
     getBlockTypeForName(name) {
         return this.names.findIndex(n => n===name)+1
     }
 
 
-    load(names) {
-        if (!Array.isArray(names)) names = [names];
-        this.names = names
-        const proms = names.map(name => this.pack(name))
-        return Promise.all(proms).then(()=>{
-            // document.body.appendChild(this.canvas)
-            this.texture.needsUpdate = true
-        })
-    }
 
     loadTextures(infos) {
-        const proms = infos.map(info => {
+        const proms = infos.map((info,index) => {
+            console.log("loading",info.src)
             return new Promise((res,rej)=>{
                 const img = new Image()
                 img.id = info.src
                 img.src = info.src
                 img.onload = () => {
-                    this.packImage(img)
-                    res(img)
+                    res(this.packImage(img,index))
                 }
                 img.onerror = (e) => {
                     console.error(`Couldn't load texture from url ${infos.src}`)
@@ -229,34 +212,11 @@ export class TextureManager {
                 }
             })
         })
-        return Promise.all(proms).then((imgs)=>{
+        return Promise.all(proms).then((infos)=>{
+            this.tiles = infos
             this.texture.needsUpdate = true
-            this.names = imgs.map(img => img.src)
         })
     }
-
-    markAsAnimated(name) {
-        this.animated[name] = true
-    }
-
-    pack(name) {
-        return new Promise((res,rej)=>{
-            const img = new Image()
-            img.id = name;
-            img.src = this.texturePath + ext(name);
-            img.onload = () => {
-                const node = this.atlas.pack(img)
-                if(node === false) {
-                    this.atlas = this.atlas.expand(img)
-                }
-                res(img)
-            }
-            img.onerror = (e) => {
-                console.error('Couldn\'t load URL [' + img.src + ']');
-                rej(e)
-            };
-        })
-    };
 
 }
 
