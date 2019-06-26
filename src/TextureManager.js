@@ -105,7 +105,6 @@ export class TextureManager {
     }
 
     packImage(img) {
-        console.log("packing",img)
         const info = {
             index:this.tiles.length,
             image:img,
@@ -215,7 +214,6 @@ export class TextureManager {
     }
 
     loadTextures(infos) {
-        this.names = infos.map(info => info.src)
         const proms = infos.map(info => {
             return new Promise((res,rej)=>{
                 const img = new Image()
@@ -231,8 +229,9 @@ export class TextureManager {
                 }
             })
         })
-        return Promise.all(proms).then(()=>{
+        return Promise.all(proms).then((imgs)=>{
             this.texture.needsUpdate = true
+            this.names = imgs.map(img => img.src)
         })
     }
 
