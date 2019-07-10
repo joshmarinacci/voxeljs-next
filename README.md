@@ -76,7 +76,7 @@ player movement and terrain changes.
 
 # Help and Contributing
 
-The general algorithm for rendering voxel data and how this engine works is documented in [this]() blog.
+The general algorithm for rendering voxel data and how this engine works is documented in [this](https://blog.mozvr.com/voxeljs-chunking-magic/) blog.
 
 For help try asking in the `#voxel` channel in the ThreeJS slack.
 
