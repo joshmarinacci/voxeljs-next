@@ -18,8 +18,10 @@
   "homepage": "https://github.com/joshmarinacci/voxeljs-next#readme",
   "dependencies": {
     "atlaspack": "^1.0.0",
+    "ecsy": "^0.2.3",
+    "ecsy-three": "^0.1.0",
     "pubnub": "^4.23.0",
-    "three": "^0.102.1",
+    "three": "^0.114.0",
     "threejs-2d-components": "0.0.4",
     "webrtc-sdk": "^2.2.5",
     "webxr-boilerplate": "^0.2.3"

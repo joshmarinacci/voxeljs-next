@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<script type="module">
+    import * as THREE from '../node_modules/three/build/three.module.js';
+    // import * as THREE from 'https://unpkg.com/three/build/three.module.js?module';
+    import {Group, Vector3, TextureLoader,
+    DirectionalLight,
+        AmbientLight} from '../node_modules/three/build/three.module.js';
+    // import {Group, Vector3, TextureLoader} from 'https://unpkg.com/three/build/three.module.js?module';
+    // import { Component, System, World } from 'https://unpkg.com/ecsy/build/ecsy.module.js?module';
+    import { Component, System, World } from '../node_modules/ecsy/build/ecsy.module.js?module';
+    import {
+        initialize,
+        // Components
+        Parent,
+        Camera,
+        Transform,
+        Object3D,
+        Environment,
+        // Systems
+        WebGLRendererSystem,
+        EnvironmentSystem,
+    // } from 'https://unpkg.com/ecsy-three/build/ecsy-three.module.js?module';
+    } from '../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js';
+
+
+    class Landscape extends Component {
+        constructor() {
+            super()
+            this.chunkManager = null
+        }
+    }
+    class VoxelSystem extends System {
+        execute(delta, time) {
+            this.queries.entities.added.forEach(entity => {
+                var ls = entity.getMutableComponent(Landscape)
+                console.log(ls);
+            })
+            this.queries.entities.results.forEach(ent => {
+                var ls = ent.getMutableComponent(Landscape)
+                ls.chunkManager.textureManager.update(time)
+                var trans = ent.getComponent(Transform)
+                // trans.rotation.x += 0.5*delta;
+                // trans.rotation.y += 0.1*delta;
+                // trans.rotation.z += 0.1*delta;
+                // ls.chunkManager.updateCenterPosition(trans.position)
+            })
+        }
+    }
+    VoxelSystem.queries = {
+        entities: {
+            components: [Landscape],
+            listen: {
+                added: true,
+                removed: true
+            }
+        }
+    }
+
+    class Rotating extends Component {}
+
+    class RotationSystem extends System {
+        execute(delta) {
+            this.queries.entities.results.forEach(entity => {
+                var rotation = entity.getMutableComponent(Transform).rotation;
+                rotation.x += 0.5 * delta;
+                rotation.y += 0.1 * delta;
+            });
+        }
+    }
+
+    RotationSystem.queries = {
+        entities: {
+            components: [Rotating, Transform]
+        }
+    };
+
+    // Create a new world to hold all our entities and systems
+    let world = new World();
+
+    // Register our custom sytem
+    world.registerSystem(RotationSystem)
+    world.registerSystem(VoxelSystem)
+    world.registerSystem(EnvironmentSystem)
+
+    // Initialize the default sets of entities and systems
+    let data = initialize(world);
+
+    let {scene, renderer, camera} = data.entities;
+    // scene.addComponent(Environment)
+
+    // Modify the position for the default camera
+    let transform = camera.getMutableComponent(Transform);
+    transform.position.z = 40;
+
+    import {ChunkManager} from "../src/ChunkManager.js"
+    import {CulledMesher} from "../src/CulledMesher.js"
+    import {TextureManager} from '../src/TextureManager.js'
+    import {generateChunkInfoFromFunction, toRad} from '../src/utils.js'
+
+
+    const flat = (i,j,k) => {
+        //an gap in the floor made of air
+        // if(j <1 && k < -5 && k > -10 ) return 0
+        //the floor is brick, from depth 0 to -10
+        if(j < 1 && j > -10) return 1
+
+        //move back 10
+        // k+=20
+        //a dome
+        // if((i*i + j*j + k*k) < 80) {
+        //     return 2
+        // }
+        //nothing else in the world
+        return 0
+    }
+    const wide_block = (i,j,k) => {
+        if(i>=-4 && i<0 && j===1 && k===6) return 1
+        return 0
+    }
+
+    new TextureLoader().load('./dummy.jpg')
+
+    let chunkManager = new ChunkManager({
+        chunkDistance:1,
+        blockSize:1,
+        mesher: new CulledMesher(),
+        chunkSize:16,
+        generateVoxelChunk: (low, high, pos) => {
+            const id = [pos.x,pos.y,pos.z].join('|')
+            console.log("making chunk for",id);
+            return generateChunkInfoFromFunction(low, high, flat)
+        },
+        container: new Group(),
+        textureManager: new TextureManager({aoEnabled:true}),
+    });
+    chunkManager.textureManager.loadTextures([
+        {
+            src:'./textures/kenneynl/tiles/grass_top.png'
+        },
+        {
+            src:'./textures/kenneynl/tiles/dirt.png'
+        },
+        {
+            src:'./textures/kenneynl/tiles/ice.png',
+        },
+        {
+            src:'./textures/kenneynl/tiles/lava.png',
+        },
+        {
+            src:'./textures/kenneynl/tiles/stone.png',
+        },
+        {
+            src:'./textures/kenneynl/tiles/sand.png',
+        },
+        {
+            src:'./textures/tnt.png',
+        },
+        {
+            src:'./textures/heart.png',
+        },
+        {
+            src:'./textures/tnt.png',
+        },
+    ]).then(()=>{
+        chunkManager.rebuildAllMeshes()
+        chunkManager.requestMissingChunks(new Vector3(0,0,0))
+        console.log("rebuilt the meshes");
+    })
+
+    // function makeCube() {
+    //     var geometry = new THREE.BoxBufferGeometry(5, 5, 5);
+    //     var material = new THREE.MeshBasicMaterial({map: texture});
+    //     let mesh = new THREE.Mesh(geometry, material);
+    //     var rotatingBox = world.createEntity()
+    //         .addComponent(Object3D, { value: mesh })
+    //         .addComponent(Transform)
+    //         .addComponent(Parent, { value: scene })
+    //     let trans = rotatingBox.getComponent(Transform);
+    //     console.log("transform is",trans);
+    //     trans.position.z = 30
+    // }
+    // makeCube();
+    // console.log('container is',chunkManager.container);
+    // let landscape = world.createEntity()
+    //     .addComponent(Object3D, {value:chunkManager.container})
+    //     .addComponent(Transform)
+    //     .addComponent(Parent, {value: scene})
+    //     .addComponent(Landscape, {chunkManager:chunkManager})
+
+    // world.createEntity()
+    //     .addComponent(Object3D, {value:new AmbientLight(0xffffff,0.3)})
+    //     .addComponent(Parent, {value: scene})
+    // const light = new DirectionalLight( 0xffffff, 1.0 );
+    // light.position.set( 0, 10, 5 ).normalize();
+    // // app.scene.add( light );
+    // world.createEntity()
+    //     .addComponent(Object3D, {value:light})
+    //     .addComponent(Parent, {value: scene})
+
+
+    let stageRot = new Group()
+    //scene.add(app.stageRot)
+    let stagePos = new Group()
+    stageRot.add(stagePos)
+    stagePos.position.z = -10
+    stagePos.position.y = -1.5
+    stagePos.position.x = 0
+
+    stagePos.add(chunkManager.container)
+
+    world.createEntity()
+        .addComponent(Object3D, {value:stageRot})
+        .addComponent(Parent, {value: scene})
+
+
+    world.execute();
+
+
+
+</script>
+
+</body>
+</html>
