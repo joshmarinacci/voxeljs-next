@@ -40,16 +40,10 @@
         execute(delta, time) {
             this.queries.entities.added.forEach(entity => {
                 var ls = entity.getMutableComponent(Landscape)
-                console.log(ls);
             })
             this.queries.entities.results.forEach(ent => {
-                var ls = ent.getMutableComponent(Landscape)
-                ls.chunkManager.textureManager.update(time)
-                var trans = ent.getComponent(Transform)
-                // trans.rotation.x += 0.5*delta;
-                // trans.rotation.y += 0.1*delta;
-                // trans.rotation.z += 0.1*delta;
-                // ls.chunkManager.updateCenterPosition(trans.position)
+                // var ls = ent.getMutableComponent(Landscape)
+                // ls.chunkManager.textureManager.update(time)
             })
         }
     }
@@ -63,31 +57,62 @@
         }
     }
 
-    class Rotating extends Component {}
-
-    class RotationSystem extends System {
-        execute(delta) {
-            this.queries.entities.results.forEach(entity => {
-                var rotation = entity.getMutableComponent(Transform).rotation;
-                rotation.x += 0.5 * delta;
-                rotation.y += 0.1 * delta;
-            });
+    class KeyboardControls extends Component {
+        constructor() {
+            super();
+            this.mapping = {}
+        }
+    }
+    class KeyboardSystem extends System {
+        init() {
+            this.keystates = {}
+            console.log("initted keyboard system");
+            document.addEventListener('keydown',this._keydown.bind(this));
+            document.addEventListener('keyup',this._keyup.bind(this));
+        }
+        _keydown(e) {
+            // console.log("key down",e)
+            if(!this.keystates[e.key]) this.keystates[e.key] = { pressed:false}
+            this.keystates[e.key].pressed = true
+        }
+        _keyup(e) {
+            // console.log("key up",e)
+            if(!this.keystates[e.key]) this.keystates[e.key] = { pressed:false}
+            this.keystates[e.key].pressed = false
+        }
+        is_keydown(name) {
+            if(this.keystates[name]) return this.keystates[name].pressed
+            return false
+        }
+        execute(delta, time) {
+            this.queries.entities.results.forEach(ent => {
+                let keys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','d','w','s','q','e',' ']
+                let controls = ent.getComponent(KeyboardControls);
+                keys.forEach(key => {
+                    if(this.is_keydown(key) && controls.mapping[key])
+                        controls.mapping[key](ent)
+                })
+            })
+        }
+    }
+    KeyboardSystem.queries = {
+        entities: {
+            components: [KeyboardControls]
         }
     }
 
-    RotationSystem.queries = {
-        entities: {
-            components: [Rotating, Transform]
-        }
-    };
 
-    // Create a new world to hold all our entities and systems
+    const Y_AXIS = new Vector3(0,1,0)
+    const SPEED = 0.1
+
+
+        // Create a new world to hold all our entities and systems
     let world = new World();
 
     // Register our custom sytem
-    world.registerSystem(RotationSystem)
     world.registerSystem(VoxelSystem)
     world.registerSystem(EnvironmentSystem)
+    world.registerSystem(KeyboardSystem)
 
     // Initialize the default sets of entities and systems
     let data = initialize(world);
@@ -95,7 +120,7 @@
 
     // Modify the position for the default camera
     let transform = camera.getMutableComponent(Transform);
-    transform.position.z = 40;
+    transform.position.z = 5;
 
     import {ChunkManager} from "../src/ChunkManager.js"
     import {CulledMesher} from "../src/CulledMesher.js"
@@ -103,7 +128,7 @@
     import {generateChunkInfoFromFunction, toRad} from '../src/utils.js'
 
     const flat = (i,j,k) => {
-        if(j < 1 && j > -10) return 1
+        if(j < -2 && j > -5) return 1
         return 0
     }
 
@@ -155,10 +180,57 @@
         console.log("rebuilt the meshes");
     })
 
+    let stageRot = world.createEntity()
+        .addComponent(Object3D, {value: new Group()})
+        .addComponent(Transform)
+        .addComponent(Parent, {value: scene})
+        .addComponent(KeyboardControls, { mapping: {
+                ArrowLeft:(ent) => {
+                    let trans = ent.getMutableComponent(Transform)
+                    trans.rotation.y -= toRad(3)
+                },
+                ArrowRight: (ent) => {
+                    let trans = ent.getMutableComponent(Transform)
+                    trans.rotation.y += toRad(3)
+                }
+            }})
+    let stagePos = world.createEntity()
+        .addComponent(Object3D, {value: new Group})
+        .addComponent(Transform)
+        .addComponent(Parent, {value:stageRot})
+        .addComponent(KeyboardControls, { mapping: {
+                ArrowUp:(ent) => {
+                    let trans = ent.getMutableComponent(Transform)
+                    let stageRot = ent.getComponent(Parent).value
+                    const dir = new Vector3(0,0,1)
+                    dir.applyAxisAngle(Y_AXIS, -stageRot.getComponent(Transform).rotation.y)
+                    let d2 = dir.normalize().multiplyScalar(SPEED)
+                    const vel = d2.multiplyScalar(4)
+                    trans.position.x += vel.x;
+                    trans.position.z += vel.z;
+                },
+                ArrowDown: (ent) => {
+                    let trans = ent.getMutableComponent(Transform)
+                    let stageRot = ent.getComponent(Parent).value
+                    const dir = new Vector3(0,0,1)
+                    dir.applyAxisAngle(Y_AXIS, -stageRot.getComponent(Transform).rotation.y)
+                    let d2 = dir.normalize().multiplyScalar(SPEED)
+                    const vel = d2.multiplyScalar(-4)
+                    trans.position.x += vel.x;
+                    trans.position.z += vel.z;
+                },
+                a:(ent) => {
+                    console.log("slide left");
+                },
+                d:(ent) => {
+                    console.log("slide right");
+                },
+            }})
+
     let landscape = world.createEntity()
         .addComponent(Object3D, {value:chunkManager.container})
         .addComponent(Transform)
-        .addComponent(Parent, {value: scene})
+        .addComponent(Parent, {value: stagePos})
         .addComponent(Landscape, {chunkManager:chunkManager})
 
     world.execute();
