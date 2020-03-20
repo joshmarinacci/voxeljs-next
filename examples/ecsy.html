@@ -116,7 +116,6 @@
         chunkSize:16,
         generateVoxelChunk: (low, high, pos) => {
             const id = [pos.x,pos.y,pos.z].join('|')
-            console.log("making chunk for",id);
             return generateChunkInfoFromFunction(low, high, flat)
         },
         container: new Group(),
