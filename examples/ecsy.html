@@ -38,6 +38,8 @@
     import {generateChunkInfoFromFunction, toRad} from '../src/utils.js'
     import * as util from "../src/utils.js"
     import {traceRay} from "../src/raycast.js"
+    import {MouseCursor, MouseDownTrigger, MouseSystem} from '../src/ecsy/mouse.js'
+    import {KeyboardControls, KeyboardSystem} from '../src/ecsy/keyboard.js'
 
 
     class Landscape extends Component {
@@ -67,104 +69,7 @@
         }
     }
 
-    class KeyboardControls extends Component {
-        constructor() {
-            super();
-            this.mapping = {}
-        }
-    }
-    class KeyboardSystem extends System {
-        init() {
-            this.keystates = {}
-            console.log("initted keyboard system");
-            document.addEventListener('keydown',this._keydown.bind(this));
-            document.addEventListener('keyup',this._keyup.bind(this));
-        }
-        _keydown(e) {
-            // console.log("key down",e)
-            if(!this.keystates[e.key]) this.keystates[e.key] = { pressed:false}
-            this.keystates[e.key].pressed = true
-        }
-        _keyup(e) {
-            // console.log("key up",e)
-            if(!this.keystates[e.key]) this.keystates[e.key] = { pressed:false}
-            this.keystates[e.key].pressed = false
-        }
-        is_keydown(name) {
-            if(this.keystates[name]) return this.keystates[name].pressed
-            return false
-        }
-        execute(delta, time) {
-            this.queries.entities.results.forEach(ent => {
-                let keys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','d','w','s','q','e',' ']
-                let controls = ent.getComponent(KeyboardControls);
-                keys.forEach(key => {
-                    if(this.is_keydown(key) && controls.mapping[key])
-                        controls.mapping[key](ent)
-                })
-            })
-        }
-    }
-    KeyboardSystem.queries = {
-        entities: {
-            components: [KeyboardControls]
-        }
-    }
 
-    class MouseCursor extends Component {
-        constructor() {
-            super();
-            this.position = new Vector2()
-            this.buttons = 0
-            this.down = false
-        }
-    }
-    class MouseDown extends Component {}
-    class MouseDownTrigger extends Component {}
-    class MouseUpTrigger extends Component {}
-    class MouseUp extends Component {}
-    class MouseSystem extends System {
-        init() {
-            this.last_point = new Vector2(200,200)
-            document.addEventListener('contextmenu',e => {
-                e.preventDefault()
-                e.stopPropagation()
-            })
-            document.addEventListener('mousemove',e => {
-                this.last_point = new Vector2(e.clientX,e.clientY)
-            })
-            document.addEventListener('mousedown', e=> {
-                this.queries.targets.results.forEach(ent=>{
-                    let cur = ent.getMutableComponent(MouseCursor)
-                    if(cur.down === false) {
-                        ent.addComponent(MouseDownTrigger)
-                    }
-                    cur.down = true
-                    cur.buttons = e.buttons
-                })
-            })
-            document.addEventListener('mouseup',e => {
-                this.queries.targets.results.forEach(ent=>{
-                    let cur = ent.getMutableComponent(MouseCursor)
-                    if(cur.down === true) {
-                        ent.addComponent(MouseUpTrigger)
-                    }
-                    cur.down = false
-                    cur.buttons = e.buttons
-                })
-            })
-        }
-        execute(delta,time) {
-            this.queries.targets.results.forEach(ent => {
-                ent.getMutableComponent(MouseCursor).position.copy(this.last_point)
-            })
-        }
-    }
-    MouseSystem.queries = {
-        targets: {
-            components: [MouseCursor]
-        }
-    }
 
     class StagePosition {}
     class StageRotation {}
@@ -236,16 +141,16 @@
                         if(mousEnt.hasComponent(MouseDownTrigger)) {
                             mousEnt.removeComponent(MouseDownTrigger)
                             let md = mousEnt.getComponent(MouseCursor)
+                            let pos = res.hitPosition.clone()
                             if(md.buttons === 1){
-                                console.log("left")
-                                let pos = res.hitPosition.clone()
                                 pos.add(res.hitNormal)
                                 pos.floor()
-
-                                let cm = landscape.chunkManager
-                                console.log(cm.textureManager)
-                                // let type = cm.textureManager.getBlockTypeForName('grass')
-                                cm.setVoxelAtCoordinates(pos,1)
+                                landscape.chunkManager.setVoxelAtCoordinates(pos,1)
+                            }
+                            if(md.buttons === 2) {
+                                // pos.add(res.hitNormal)
+                                pos.floor()
+                                landscape.chunkManager.setVoxelAtCoordinates(pos,0)
                             }
                         }
                     })
