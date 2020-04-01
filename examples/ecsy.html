@@ -111,28 +111,58 @@
         }
     }
 
-    class MousePosition extends Component {
+    class MouseCursor extends Component {
         constructor() {
             super();
             this.position = new Vector2()
+            this.buttons = 0
+            this.down = false
         }
     }
+    class MouseDown extends Component {}
+    class MouseDownTrigger extends Component {}
+    class MouseUpTrigger extends Component {}
+    class MouseUp extends Component {}
     class MouseSystem extends System {
         init() {
             this.last_point = new Vector2(200,200)
+            document.addEventListener('contextmenu',e => {
+                e.preventDefault()
+                e.stopPropagation()
+            })
             document.addEventListener('mousemove',e => {
                 this.last_point = new Vector2(e.clientX,e.clientY)
+            })
+            document.addEventListener('mousedown', e=> {
+                this.queries.targets.results.forEach(ent=>{
+                    let cur = ent.getMutableComponent(MouseCursor)
+                    if(cur.down === false) {
+                        ent.addComponent(MouseDownTrigger)
+                    }
+                    cur.down = true
+                    cur.buttons = e.buttons
+                })
+            })
+            document.addEventListener('mouseup',e => {
+                this.queries.targets.results.forEach(ent=>{
+                    let cur = ent.getMutableComponent(MouseCursor)
+                    if(cur.down === true) {
+                        ent.addComponent(MouseUpTrigger)
+                    }
+                    cur.down = false
+                    cur.buttons = e.buttons
+                })
             })
         }
         execute(delta,time) {
             this.queries.targets.results.forEach(ent => {
-                ent.getMutableComponent(MousePosition).position.copy(this.last_point)
+                ent.getMutableComponent(MouseCursor).position.copy(this.last_point)
             })
         }
     }
     MouseSystem.queries = {
         targets: {
-            components: [MousePosition]
+            components: [MouseCursor]
         }
     }
 
@@ -180,13 +210,13 @@
         init() {
         }
         execute(delta,time) {
-            this.queries.mouse.results.forEach(ent => {
-                let mouse = ent.getComponent(MousePosition)
+            this.queries.mouse.results.forEach(mousEnt => {
+                let mouse = mousEnt.getComponent(MouseCursor)
                 let stageRot = this.queries.stageRot.results[0].getComponent(Object3D).value
                 let stagePos = this.queries.stagePos.results[0].getComponent(Object3D).value;
                 this.queries.landscape.results.forEach(ent=>{
                     const landscape = ent.getComponent(Landscape);
-                    this.queries.entities.results.forEach(ent => {
+                    this.queries.highlights.results.forEach(ent => {
                         // console.log("checking",mouse.position, stageRot, stagePos);
                         const domElement = document.querySelector("canvas")
                         const camera = this.queries.camera.results[0].getComponent(Object3D).value
@@ -197,18 +227,46 @@
                             landscape.chunkManager, mouse.position, distance)
                         //console.log("res is",res);
                         res.hitPosition.floor()
+
+                        //move the highlight
                         let tran = ent.getMutableComponent(Transform);
                         tran.position.copy(res.hitPosition)
+
+                        //if left button
+                        if(mousEnt.hasComponent(MouseDownTrigger)) {
+                            mousEnt.removeComponent(MouseDownTrigger)
+                            let md = mousEnt.getComponent(MouseCursor)
+                            if(md.buttons === 1){
+                                console.log("left")
+                                let pos = res.hitPosition.clone()
+                                pos.add(res.hitNormal)
+                                pos.floor()
+
+                                let cm = landscape.chunkManager
+                                console.log(cm.textureManager)
+                                // let type = cm.textureManager.getBlockTypeForName('grass')
+                                cm.setVoxelAtCoordinates(pos,1)
+                            }
+                        }
                     })
                 })
+            })
+            this.queries.mouse_down.added.forEach(me=>{
+                console.log("a mouse down happened");
             })
         }
     }
     HighlightSystem.queries = {
-        entities: { components: [Highlight]},
+        highlights: { components: [Highlight]},
         stagePos: { components: [StagePosition]},
         stageRot: { components: [StageRotation]},
-        mouse: { components:[MousePosition] },
+        mouse: { components:[MouseCursor] },
+        mouse_down: {
+            components:[MouseCursor,MouseDownTrigger],
+            listen: {
+                added:[MouseDownTrigger]
+            }
+        },
         camera: { components:[Camera] },
         landscape: { components:[Landscape]},
     }
@@ -218,7 +276,7 @@
     const SPEED = 0.1
 
 
-        // Create a new world to hold all our entities and systems
+        // Create a new world to hold all our highlights and systems
     let world = new World();
 
     // Register our custom sytem
@@ -228,7 +286,7 @@
     world.registerSystem(MouseSystem)
     world.registerSystem(HighlightSystem)
 
-    // Initialize the default sets of entities and systems
+    // Initialize the default sets of highlights and systems
     let data = initialize(world);
     let {scene, renderer, camera} = data.entities;
     console.log("got it",data)
@@ -350,7 +408,7 @@
     world.execute();
 
     let mouse = world.createEntity()
-        .addComponent(MousePosition)
+        .addComponent(MouseCursor)
 
     let mesh = new Mesh(
         new CubeGeometry(1.1,1.1,1.1, 4,4,4).translate(0.5,0.5,0.5),
