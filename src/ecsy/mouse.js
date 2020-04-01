@@ -1,15 +1,5 @@
-import { Component, System, World } from '../../node_modules/ecsy/build/ecsy.module.js?module';
-import {Group,
-    Vector3,
-    Vector2,
-    TextureLoader,
-    CubeGeometry,
-    MeshLambertMaterial,
-    Mesh,
-    Quaternion,
-    Ray,
-    AmbientLight,
-} from '../../node_modules/three/build/three.module.js';
+import {Component, System} from '../../node_modules/ecsy/build/ecsy.module.js?module'
+import {Vector2} from '../../node_modules/three/build/three.module.js'
 
 export class MouseCursor extends Component {
     constructor() {

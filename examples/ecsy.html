@@ -9,13 +9,10 @@
 <script type="module">
     import {Group,
         Vector3,
-        Vector2,
         TextureLoader,
         CubeGeometry,
         MeshLambertMaterial,
         Mesh,
-        Quaternion,
-        Ray,
         AmbientLight,
     } from '../node_modules/three/build/three.module.js';
     import { Component, System, World } from '../node_modules/ecsy/build/ecsy.module.js?module';
@@ -24,13 +21,7 @@
         Parent,
         Transform,
         Object3D,
-        WebGLRendererSystem,
-        WebGLRendererContext,
-        EnvironmentSystem,
-        Scene,
-        Camera,
-        CameraRig,
-        Environment,
+
     } from '../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js';
     import * as util from "../src/utils.js"
     import {MouseCursor, MouseSystem} from '../src/ecsy/mouse.js'
@@ -48,7 +39,6 @@
 
     // Register all of the systems we will need
     world.registerSystem(VoxelSystem)
-    world.registerSystem(EnvironmentSystem)
     world.registerSystem(KeyboardSystem)
     world.registerSystem(MouseSystem)
     world.registerSystem(HighlightSystem)
@@ -82,7 +72,7 @@
                     trans.rotation.y += util.toRad(3)
                 }
             }})
-        .addComponent(StageRotation)
+        .addComponent(StageRotation) // StageRotation is how the rest of the system can use this
 
     // a position for moving the world around
     let stagePos = world.createEntity()
@@ -117,7 +107,7 @@
                     console.log("slide right");
                 },
             }})
-        .addComponent(StagePosition)
+        .addComponent(StagePosition) // StagePosition
 
     //make the actual landscape
     world.createEntity()

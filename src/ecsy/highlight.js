@@ -1,29 +1,7 @@
 import * as util from "../utils.js"
-import { Component, System, World } from '../../node_modules/ecsy/build/ecsy.module.js?module';
-import {Group,
-    Vector3,
-    Vector2,
-    TextureLoader,
-    CubeGeometry,
-    MeshLambertMaterial,
-    Mesh,
-    Quaternion,
-    Ray,
-    AmbientLight,
-} from '../../node_modules/three/build/three.module.js';
-import {
-    initialize,
-    Parent,
-    Transform,
-    Object3D,
-    WebGLRendererSystem,
-    WebGLRendererContext,
-    EnvironmentSystem,
-    Scene,
-    Camera,
-    CameraRig,
-    Environment,
-} from '../../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js';
+import {System} from '../../node_modules/ecsy/build/ecsy.module.js?module'
+import {Quaternion, Ray, Vector2, Vector3} from '../../node_modules/three/build/three.module.js'
+import {Camera, Object3D, Transform} from '../../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js'
 import {traceRay} from "../raycast.js"
 import {StagePosition, StageRotation} from './camera_gimbal.js'
 import {MouseCursor, MouseDownTrigger} from './mouse.js'
