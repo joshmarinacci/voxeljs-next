@@ -32,159 +32,21 @@
         CameraRig,
         Environment,
     } from '../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js';
-    import {ChunkManager} from "../src/ChunkManager.js"
-    import {CulledMesher} from "../src/CulledMesher.js"
-    import {TextureManager} from '../src/TextureManager.js'
-    import {generateChunkInfoFromFunction, toRad} from '../src/utils.js'
     import * as util from "../src/utils.js"
-    import {traceRay} from "../src/raycast.js"
-    import {MouseCursor, MouseDownTrigger, MouseSystem} from '../src/ecsy/mouse.js'
+    import {MouseCursor, MouseSystem} from '../src/ecsy/mouse.js'
     import {KeyboardControls, KeyboardSystem} from '../src/ecsy/keyboard.js'
-
-
-    class Landscape extends Component {
-        constructor() {
-            super()
-            this.chunkManager = null
-        }
-    }
-    class VoxelSystem extends System {
-        execute(delta, time) {
-            this.queries.entities.added.forEach(entity => {
-                var ls = entity.getMutableComponent(Landscape)
-            })
-            this.queries.entities.results.forEach(ent => {
-                // var ls = ent.getMutableComponent(Landscape)
-                // ls.chunkManager.textureManager.update(time)
-            })
-        }
-    }
-    VoxelSystem.queries = {
-        entities: {
-            components: [Landscape],
-            listen: {
-                added: true,
-                removed: true
-            }
-        }
-    }
-
-
-
-    class StagePosition {}
-    class StageRotation {}
-    class Highlight {
-
-    }
-
-    export function traceRayAtScreenCoords(
-        stageRot, stagePos, domElement, camera,
-        chunkManager, pt, distance) {
-        const ray = new Ray()
-
-        // e = e.changedTouches[0]
-        const mouse = new Vector2()
-        const bounds = domElement.getBoundingClientRect()
-        mouse.x = ((pt.x - bounds.left) / bounds.width) * 2 - 1
-        mouse.y = -((pt.y - bounds.top) / bounds.height) * 2 + 1
-
-        ray.origin.copy(camera.position)
-        ray.direction.set(mouse.x, mouse.y, 0.5).unproject(camera).sub(ray.origin).normalize()
-        // console.log("new bounds is",mouse,camera)
-        // console.log("stage pos is",stagePos)
-
-        stagePos.worldToLocal(ray.origin)
-        ray.origin.add(new Vector3(0,0,-0.5))
-        const quat = new Quaternion()
-        quat.copy(stageRot.quaternion)
-        quat.inverse()
-        ray.direction.applyQuaternion(quat)
-
-        const hitNormal = new Vector3(0,0,0)
-        const hitPosition = new Vector3(0,0,0)
-        // console.log("chunk manager is", chunkManager)
-        const hitBlock = traceRay(chunkManager,ray.origin,ray.direction,distance,hitPosition,hitNormal,util.EPSILON)
-        return {
-            hitBlock:hitBlock,
-            hitPosition:hitPosition,
-            hitNormal: hitNormal
-        }
-    }
-
-    class HighlightSystem extends System {
-        init() {
-        }
-        execute(delta,time) {
-            this.queries.mouse.results.forEach(mousEnt => {
-                let mouse = mousEnt.getComponent(MouseCursor)
-                let stageRot = this.queries.stageRot.results[0].getComponent(Object3D).value
-                let stagePos = this.queries.stagePos.results[0].getComponent(Object3D).value;
-                this.queries.landscape.results.forEach(ent=>{
-                    const landscape = ent.getComponent(Landscape);
-                    this.queries.highlights.results.forEach(ent => {
-                        // console.log("checking",mouse.position, stageRot, stagePos);
-                        const domElement = document.querySelector("canvas")
-                        const camera = this.queries.camera.results[0].getComponent(Object3D).value
-                        const distance = 10;
-
-                        const res = traceRayAtScreenCoords(
-                            stageRot, stagePos, domElement, camera,
-                            landscape.chunkManager, mouse.position, distance)
-                        //console.log("res is",res);
-                        res.hitPosition.floor()
-
-                        //move the highlight
-                        let tran = ent.getMutableComponent(Transform);
-                        tran.position.copy(res.hitPosition)
-
-                        //if left button
-                        if(mousEnt.hasComponent(MouseDownTrigger)) {
-                            mousEnt.removeComponent(MouseDownTrigger)
-                            let md = mousEnt.getComponent(MouseCursor)
-                            let pos = res.hitPosition.clone()
-                            if(md.buttons === 1){
-                                pos.add(res.hitNormal)
-                                pos.floor()
-                                landscape.chunkManager.setVoxelAtCoordinates(pos,1)
-                            }
-                            if(md.buttons === 2) {
-                                // pos.add(res.hitNormal)
-                                pos.floor()
-                                landscape.chunkManager.setVoxelAtCoordinates(pos,0)
-                            }
-                        }
-                    })
-                })
-            })
-            this.queries.mouse_down.added.forEach(me=>{
-                console.log("a mouse down happened");
-            })
-        }
-    }
-    HighlightSystem.queries = {
-        highlights: { components: [Highlight]},
-        stagePos: { components: [StagePosition]},
-        stageRot: { components: [StageRotation]},
-        mouse: { components:[MouseCursor] },
-        mouse_down: {
-            components:[MouseCursor,MouseDownTrigger],
-            listen: {
-                added:[MouseDownTrigger]
-            }
-        },
-        camera: { components:[Camera] },
-        landscape: { components:[Landscape]},
-    }
+    import {VoxelLandscape, VoxelSystem, VoxelTextures} from '../src/ecsy/voxels.js'
+    import {Highlight, HighlightSystem} from '../src/ecsy/highlight.js'
+    import {StagePosition, StageRotation} from '../src/ecsy/camera_gimbal.js'
 
 
     const Y_AXIS = new Vector3(0,1,0)
     const SPEED = 0.1
 
-
-        // Create a new world to hold all our highlights and systems
+    // Create a new world to hold all our highlights and systems
     let world = new World();
 
-    // Register our custom sytem
+    // Register all of the systems we will need
     world.registerSystem(VoxelSystem)
     world.registerSystem(EnvironmentSystem)
     world.registerSystem(KeyboardSystem)
@@ -197,63 +59,15 @@
     console.log("got it",data)
 
     // Modify the position for the default camera
-    let transform = camera.getMutableComponent(Transform);
-    transform.position.z = 5;
+    // let transform = camera.getMutableComponent(Transform);
+    // transform.position.z = 5;
 
 
-    const flat = (i,j,k) => {
-        if(j < -2 && j > -5) return 1
-        return 0
-    }
 
     new TextureLoader().load('./dummy.jpg')
 
-    let chunkManager = new ChunkManager({
-        chunkDistance:1,
-        blockSize:1,
-        mesher: new CulledMesher(),
-        chunkSize:16,
-        generateVoxelChunk: (low, high, pos) => {
-            const id = [pos.x,pos.y,pos.z].join('|')
-            return generateChunkInfoFromFunction(low, high, flat)
-        },
-        container: new Group(),
-        textureManager: new TextureManager({aoEnabled:true}),
-    });
-    chunkManager.textureManager.loadTextures([
-        {
-            src:'./textures/kenneynl/tiles/grass_top.png'
-        },
-        {
-            src:'./textures/kenneynl/tiles/dirt.png'
-        },
-        {
-            src:'./textures/kenneynl/tiles/ice.png',
-        },
-        {
-            src:'./textures/kenneynl/tiles/lava.png',
-        },
-        {
-            src:'./textures/kenneynl/tiles/stone.png',
-        },
-        {
-            src:'./textures/kenneynl/tiles/sand.png',
-        },
-        {
-            src:'./textures/tnt.png',
-        },
-        {
-            src:'./textures/heart.png',
-        },
-        {
-            src:'./textures/tnt.png',
-        },
-    ]).then(()=>{
-        chunkManager.rebuildAllMeshes()
-        chunkManager.requestMissingChunks(new Vector3(0,0,0))
-        console.log("rebuilt the meshes");
-    })
 
+    // a pivot for rotating the world around
     let stageRot = world.createEntity()
         .addComponent(Object3D, {value: new Group()})
         .addComponent(Transform)
@@ -270,6 +84,7 @@
             }})
         .addComponent(StageRotation)
 
+    // a position for moving the world around
     let stagePos = world.createEntity()
         .addComponent(Object3D, {value: new Group})
         .addComponent(Transform)
@@ -304,17 +119,49 @@
             }})
         .addComponent(StagePosition)
 
-    let landscape = world.createEntity()
-        .addComponent(Object3D, {value:chunkManager.container})
+    //make the actual landscape
+    world.createEntity()
         .addComponent(Transform)
         .addComponent(Parent, {value: stagePos})
-        .addComponent(Landscape, {chunkManager:chunkManager})
+        .addComponent(VoxelLandscape, {
+            make_voxel: (x,y,z) => {
+                // make a floor between -2 and -5
+                if(y < -2 && y > -5) return 1 // grass
+                // make a 4x4x4 cube floating in space
+                if(    x > 0 && x < 5
+                    && z > 5 && z < 10
+                    && y > 5 && y < 10
+                ) return 2 // brick
+                return 0
+            }
+            ,
+        })
+        .addComponent(VoxelTextures,{
+            textures:[
+                {
+                    src:'./textures/dirt.png'
+                },
+                {
+                    src:'./textures/grass.png'
+                },
+                {
+                    src:'./textures/brick.png'
+                },
+                {
+                    src:'./textures/tnt.png'
+                },
+                {
+                    src:'./textures/heart.png',
+                },
+        ]})
 
     world.execute();
 
-    let mouse = world.createEntity()
+    // create a mouse cursor so that we can look for mouse events
+    world.createEntity()
         .addComponent(MouseCursor)
 
+    //create a ThreeJS mesh as the highlighter
     let mesh = new Mesh(
         new CubeGeometry(1.1,1.1,1.1, 4,4,4).translate(0.5,0.5,0.5),
         new MeshLambertMaterial({
@@ -326,12 +173,14 @@
             opacity: 0.5,
         }));
 
+    // make the highlighter
     let highlight = world.createEntity()
         .addComponent(Transform)
         .addComponent(Object3D, { value: mesh})
         .addComponent(Parent, {value: stagePos})
         .addComponent(Highlight)
 
+    //add some ambient light or the highlight mesh won't have any color
     world.createEntity()
         .addComponent(Object3D, { value: new AmbientLight()})
         .addComponent(Parent, {value: scene})
