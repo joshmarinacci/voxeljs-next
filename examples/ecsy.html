@@ -7,27 +7,37 @@
 <body>
 
 <script type="module">
-    import * as THREE from '../node_modules/three/build/three.module.js';
-    // import * as THREE from 'https://unpkg.com/three/build/three.module.js?module';
-    import {Group, Vector3, TextureLoader,
-    DirectionalLight,
-        AmbientLight} from '../node_modules/three/build/three.module.js';
-    // import {Group, Vector3, TextureLoader} from 'https://unpkg.com/three/build/three.module.js?module';
-    // import { Component, System, World } from 'https://unpkg.com/ecsy/build/ecsy.module.js?module';
+    import {Group,
+        Vector3,
+        Vector2,
+        TextureLoader,
+        CubeGeometry,
+        MeshLambertMaterial,
+        Mesh,
+        Quaternion,
+        Ray,
+        AmbientLight,
+    } from '../node_modules/three/build/three.module.js';
     import { Component, System, World } from '../node_modules/ecsy/build/ecsy.module.js?module';
     import {
         initialize,
-        // Components
         Parent,
-        Camera,
         Transform,
         Object3D,
-        Environment,
-        // Systems
         WebGLRendererSystem,
+        WebGLRendererContext,
         EnvironmentSystem,
-    // } from 'https://unpkg.com/ecsy-three/build/ecsy-three.module.js?module';
+        Scene,
+        Camera,
+        CameraRig,
+        Environment,
     } from '../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js';
+    import {ChunkManager} from "../src/ChunkManager.js"
+    import {CulledMesher} from "../src/CulledMesher.js"
+    import {TextureManager} from '../src/TextureManager.js'
+    import {generateChunkInfoFromFunction, toRad} from '../src/utils.js'
+    import * as util from "../src/utils.js"
+    import {traceRay} from "../src/raycast.js"
 
 
     class Landscape extends Component {
@@ -101,6 +111,108 @@
         }
     }
 
+    class MousePosition extends Component {
+        constructor() {
+            super();
+            this.position = new Vector2()
+        }
+    }
+    class MouseSystem extends System {
+        init() {
+            this.last_point = new Vector2(200,200)
+            document.addEventListener('mousemove',e => {
+                this.last_point = new Vector2(e.clientX,e.clientY)
+            })
+        }
+        execute(delta,time) {
+            this.queries.targets.results.forEach(ent => {
+                ent.getMutableComponent(MousePosition).position.copy(this.last_point)
+            })
+        }
+    }
+    MouseSystem.queries = {
+        targets: {
+            components: [MousePosition]
+        }
+    }
+
+    class StagePosition {}
+    class StageRotation {}
+    class Highlight {
+
+    }
+
+    export function traceRayAtScreenCoords(
+        stageRot, stagePos, domElement, camera,
+        chunkManager, pt, distance) {
+        const ray = new Ray()
+
+        // e = e.changedTouches[0]
+        const mouse = new Vector2()
+        const bounds = domElement.getBoundingClientRect()
+        mouse.x = ((pt.x - bounds.left) / bounds.width) * 2 - 1
+        mouse.y = -((pt.y - bounds.top) / bounds.height) * 2 + 1
+
+        ray.origin.copy(camera.position)
+        ray.direction.set(mouse.x, mouse.y, 0.5).unproject(camera).sub(ray.origin).normalize()
+        // console.log("new bounds is",mouse,camera)
+        // console.log("stage pos is",stagePos)
+
+        stagePos.worldToLocal(ray.origin)
+        ray.origin.add(new Vector3(0,0,-0.5))
+        const quat = new Quaternion()
+        quat.copy(stageRot.quaternion)
+        quat.inverse()
+        ray.direction.applyQuaternion(quat)
+
+        const hitNormal = new Vector3(0,0,0)
+        const hitPosition = new Vector3(0,0,0)
+        // console.log("chunk manager is", chunkManager)
+        const hitBlock = traceRay(chunkManager,ray.origin,ray.direction,distance,hitPosition,hitNormal,util.EPSILON)
+        return {
+            hitBlock:hitBlock,
+            hitPosition:hitPosition,
+            hitNormal: hitNormal
+        }
+    }
+
+    class HighlightSystem extends System {
+        init() {
+        }
+        execute(delta,time) {
+            this.queries.mouse.results.forEach(ent => {
+                let mouse = ent.getComponent(MousePosition)
+                let stageRot = this.queries.stageRot.results[0].getComponent(Object3D).value
+                let stagePos = this.queries.stagePos.results[0].getComponent(Object3D).value;
+                this.queries.landscape.results.forEach(ent=>{
+                    const landscape = ent.getComponent(Landscape);
+                    this.queries.entities.results.forEach(ent => {
+                        // console.log("checking",mouse.position, stageRot, stagePos);
+                        const domElement = document.querySelector("canvas")
+                        const camera = this.queries.camera.results[0].getComponent(Object3D).value
+                        const distance = 10;
+
+                        const res = traceRayAtScreenCoords(
+                            stageRot, stagePos, domElement, camera,
+                            landscape.chunkManager, mouse.position, distance)
+                        //console.log("res is",res);
+                        res.hitPosition.floor()
+                        let tran = ent.getMutableComponent(Transform);
+                        tran.position.copy(res.hitPosition)
+                    })
+                })
+            })
+        }
+    }
+    HighlightSystem.queries = {
+        entities: { components: [Highlight]},
+        stagePos: { components: [StagePosition]},
+        stageRot: { components: [StageRotation]},
+        mouse: { components:[MousePosition] },
+        camera: { components:[Camera] },
+        landscape: { components:[Landscape]},
+    }
+
 
     const Y_AXIS = new Vector3(0,1,0)
     const SPEED = 0.1
@@ -113,19 +225,18 @@
     world.registerSystem(VoxelSystem)
     world.registerSystem(EnvironmentSystem)
     world.registerSystem(KeyboardSystem)
+    world.registerSystem(MouseSystem)
+    world.registerSystem(HighlightSystem)
 
     // Initialize the default sets of entities and systems
     let data = initialize(world);
     let {scene, renderer, camera} = data.entities;
+    console.log("got it",data)
 
     // Modify the position for the default camera
     let transform = camera.getMutableComponent(Transform);
     transform.position.z = 5;
 
-    import {ChunkManager} from "../src/ChunkManager.js"
-    import {CulledMesher} from "../src/CulledMesher.js"
-    import {TextureManager} from '../src/TextureManager.js'
-    import {generateChunkInfoFromFunction, toRad} from '../src/utils.js'
 
     const flat = (i,j,k) => {
         if(j < -2 && j > -5) return 1
@@ -187,13 +298,15 @@
         .addComponent(KeyboardControls, { mapping: {
                 ArrowLeft:(ent) => {
                     let trans = ent.getMutableComponent(Transform)
-                    trans.rotation.y -= toRad(3)
+                    trans.rotation.y -= util.toRad(3)
                 },
                 ArrowRight: (ent) => {
                     let trans = ent.getMutableComponent(Transform)
-                    trans.rotation.y += toRad(3)
+                    trans.rotation.y += util.toRad(3)
                 }
             }})
+        .addComponent(StageRotation)
+
     let stagePos = world.createEntity()
         .addComponent(Object3D, {value: new Group})
         .addComponent(Transform)
@@ -226,6 +339,7 @@
                     console.log("slide right");
                 },
             }})
+        .addComponent(StagePosition)
 
     let landscape = world.createEntity()
         .addComponent(Object3D, {value:chunkManager.container})
@@ -235,8 +349,29 @@
 
     world.execute();
 
+    let mouse = world.createEntity()
+        .addComponent(MousePosition)
 
+    let mesh = new Mesh(
+        new CubeGeometry(1.1,1.1,1.1, 4,4,4).translate(0.5,0.5,0.5),
+        new MeshLambertMaterial({
+            color:'green',
+            depthTest:true,
+            wireframe:true,
+            wireframeLinewidth: 3,
+            transparent: true,
+            opacity: 0.5,
+        }));
 
+    let highlight = world.createEntity()
+        .addComponent(Transform)
+        .addComponent(Object3D, { value: mesh})
+        .addComponent(Parent, {value: stagePos})
+        .addComponent(Highlight)
+
+    world.createEntity()
+        .addComponent(Object3D, { value: new AmbientLight()})
+        .addComponent(Parent, {value: scene})
 </script>
 
 </body>
