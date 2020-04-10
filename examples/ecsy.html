@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" href="../src/ecsy/fullscreen.css">
+    <link rel="stylesheet" href="../src/ecsy/webxr.css">
 </head>
 <body>
 
@@ -21,7 +23,6 @@
         Parent,
         Transform,
         Object3D,
-
     } from '../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js';
     import * as util from "../src/utils.js"
     import {MouseCursor, MouseSystem} from '../src/ecsy/mouse.js'
@@ -29,6 +30,8 @@
     import {VoxelLandscape, VoxelSystem, VoxelTextures} from '../src/ecsy/voxels.js'
     import {Highlight, HighlightSystem} from '../src/ecsy/highlight.js'
     import {StagePosition, StageRotation} from '../src/ecsy/camera_gimbal.js'
+    import {WebXRSystem, WebXRButton} from '../src/ecsy/webxr.js'
+    import {FullscreenSystem, FullscreenButton} from '../src/ecsy/fullscreen.js'
 
 
     const Y_AXIS = new Vector3(0,1,0)
@@ -42,6 +45,8 @@
     world.registerSystem(KeyboardSystem)
     world.registerSystem(MouseSystem)
     world.registerSystem(HighlightSystem)
+    world.registerSystem(WebXRSystem);
+    world.registerSystem(FullscreenSystem);
 
     // Initialize the default sets of highlights and systems
     let data = initialize(world);
@@ -51,6 +56,9 @@
     // Modify the position for the default camera
     // let transform = camera.getMutableComponent(Transform);
     // transform.position.z = 5;
+
+    scene.addComponent(FullscreenButton);
+    scene.addComponent(WebXRButton);
 
 
 

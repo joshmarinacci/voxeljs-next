@@ -1,0 +1,7 @@
+button.fullscreen {
+    border: 5px solid red;
+    position: fixed;
+    left: 10vw;
+    top: 10vh;
+    font-size: 200%;
+}
