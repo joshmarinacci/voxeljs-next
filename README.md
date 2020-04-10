@@ -1,12 +1,20 @@
 # voxeljs-next
 The next generation of Voxel JS.
 
+# Play with it
+
+Try out a [live demo here](https://vr.josh.earth/voxeljs-next/examples/ecsy.html).  This demo shows:
+* create a flat world 
+* move with keyboard
+* add and remove blocks w/ mouse
 
 # What is it
 
 VoxelJS is a voxel engine for games, similar to Minecraft.  It provides the ability to draw voxels on the screen,
 define the landscape with a function, load up textures, and navigate around the world in desktop mode and VR, 
-and place/remove blocks.
+and place/remove blocks.  VoxelJS uses the voxel code from the [original Voxel.js project](http://www.voxeljs.com/), updated to the latest 
+ThreeJS, adds WebXR support, and uses the new entity component system [ECSY](https://ecsy.io/);
+
 
 Notably VoxelJS does *not* provide any sort of server component, multi-player support, or scripting. To create 
 interactive effects like a TNT block you would need to write that code yourself (examples coming soon)..
