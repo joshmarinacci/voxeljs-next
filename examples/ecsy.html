@@ -3,6 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style type="text/css">
+        html, body {
+            padding: 0;
+            margin:0;
+            overflow: hidden;
+        }
+
+        div.dom-dashboard {
+            border: 5px solid black;
+            z-index: 10;
+            position: fixed;
+            top: 10vh;
+            left: 10vw;
+            right: 10vw;
+            bottom: 10vh;
+            background: white;
+            opacity: 0.8;
+            display: none;
+        }
+        div.dom-dashboard img {
+            width: 10vw;
+            image-rendering: crisp-edges;
+            border: 5px solid black;
+            padding: 5px;
+            margin: 5px;
+            background-color: white;
+        }
+        div.dom-dashboard.visible {
+            display: block;
+        }
+        div.dom-dashboard button {
+            position: absolute;
+            bottom:0;
+            right:0;
+            font-size: 200%;
+        }
+
+    </style>
 </head>
 <body>
 
@@ -27,8 +65,92 @@
     import {MouseCursor, MouseSystem} from '../src/ecsy/mouse.js'
     import {KeyboardControls, KeyboardSystem} from '../src/ecsy/keyboard.js'
     import {VoxelLandscape, VoxelSystem, VoxelTextures} from '../src/ecsy/voxels.js'
-    import {Highlight, HighlightSystem} from '../src/ecsy/highlight.js'
+    import {ActiveBlock, Highlight, HighlightSystem} from '../src/ecsy/highlight.js'
     import {StagePosition, StageRotation} from '../src/ecsy/camera_gimbal.js'
+
+
+    class DomDashboard extends Component {
+        constructor() {
+            super();
+            this.domElement = null
+        }
+    }
+
+    class DashboardVisible extends Component {
+
+    }
+
+    class DashboardDOMOvleraySystem extends System {
+        execute(delta, time) {
+            this.queries.dash.added.forEach(me=>{
+                const dash = me.getComponent(DomDashboard);
+                let div = document.createElement('div');
+                div.classList.add("dom-dashboard");
+                div.addEventListener('mousedown',e => e.stopPropagation());
+                div.addEventListener('mouseup',e => e.stopPropagation());
+                div.addEventListener('mousemove',e => e.stopPropagation());
+                document.documentElement.append(div)
+
+                this.queries.textures.results.forEach(ent => {
+                    console.log("textures are", ent.getComponent(VoxelTextures))
+                    let texs = ent.getComponent(VoxelTextures).textures
+                    texs.forEach((tex,i) => {
+                        console.log("adding texture",tex);
+                        let img = document.createElement('img')
+                        img.src = tex.src;
+                        div.append(img);
+                        img.addEventListener('click',(e)=>{
+                            e.preventDefault();
+                            e.stopPropagation()
+                            console.log(`chose this image ${i}`,i)
+                            this.queries.active.results.forEach(ent=>{
+                                ent.getMutableComponent(ActiveBlock).type = i
+                            })
+                        })
+                    })
+                })
+                let dismiss = document.createElement('button');
+                dismiss.innerHTML = "dismiss"
+                dismiss.addEventListener('click',()=>{
+                    this.queries.visible.results.forEach(ent => {
+                        ent.removeComponent(DashboardVisible)
+                    })
+                })
+                div.append(dismiss)
+                dash.domElement = div
+            })
+            this.queries.visible.added.forEach(ent => {
+                console.log("made visible")
+                ent.getMutableComponent(DomDashboard).domElement.classList.add('visible')
+            })
+            this.queries.visible.removed.forEach(ent => {
+                console.log("made in-visible")
+                ent.getMutableComponent(DomDashboard).domElement.classList.remove('visible')
+            })
+        }
+    }
+    DashboardDOMOvleraySystem.queries = {
+        dash: {
+            components:[DomDashboard],
+            listen: {
+                added:true,
+            }
+        },
+        visible: {
+            components:[DashboardVisible, DomDashboard],
+            listen: {
+                added:true,
+                removed:true,
+            }
+        },
+        textures: {
+            components:[VoxelTextures],
+        },
+        active: {
+            components:[ActiveBlock]
+        },
+    }
+
 
 
     const Y_AXIS = new Vector3(0,1,0)
@@ -42,20 +164,23 @@
     world.registerSystem(KeyboardSystem)
     world.registerSystem(MouseSystem)
     world.registerSystem(HighlightSystem)
+    world.registerSystem(DashboardDOMOvleraySystem)
 
     // Initialize the default sets of highlights and systems
     let data = initialize(world);
     let {scene, renderer, camera} = data.entities;
     console.log("got it",data)
 
-    // Modify the position for the default camera
-    // let transform = camera.getMutableComponent(Transform);
-    // transform.position.z = 5;
-
-
 
     new TextureLoader().load('./dummy.jpg')
 
+
+    // add a dashboard to the scene
+    let dashboard = scene.addComponent(DomDashboard)
+        .addComponent(DashboardVisible)
+
+    //set the active block to type 3 (TNT)
+    scene.addComponent(ActiveBlock, {type:3})
 
     // a pivot for rotating the world around
     let stageRot = world.createEntity()
@@ -106,6 +231,10 @@
                 d:(ent) => {
                     console.log("slide right");
                 },
+                t:(ent) => {
+                    console.log("need to show the dashboard")
+                    dashboard.addComponent(DashboardVisible)
+                }
             }})
         .addComponent(StagePosition) // StagePosition
 
@@ -174,6 +303,8 @@
     world.createEntity()
         .addComponent(Object3D, { value: new AmbientLight()})
         .addComponent(Parent, {value: scene})
+
+
 </script>
 
 </body>

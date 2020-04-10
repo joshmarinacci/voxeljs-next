@@ -9,6 +9,11 @@ import {VoxelLandscape} from './voxels.js'
 
 export class Highlight {
 }
+export class ActiveBlock {
+    constructor() {
+        this.type = 1;
+    }
+}
 
 
 export class HighlightSystem extends System {
@@ -78,7 +83,8 @@ export class HighlightSystem extends System {
                         if(md.buttons === 1){
                             pos.add(res.hitNormal)
                             pos.floor()
-                            landscape.chunkManager.setVoxelAtCoordinates(pos,2)
+                            let active = this.queries.active.results[0]
+                            landscape.chunkManager.setVoxelAtCoordinates(pos,active.getComponent(ActiveBlock).type)
                         }
                         if(md.buttons === 2) {
                             // pos.add(res.hitNormal)
@@ -107,4 +113,5 @@ HighlightSystem.queries = {
     },
     camera: { components:[Camera] },
     landscape: { components:[VoxelLandscape]},
+    active: { components:[ActiveBlock]}
 }

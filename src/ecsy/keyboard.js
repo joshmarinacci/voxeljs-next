@@ -29,7 +29,7 @@ export class KeyboardSystem extends System {
     }
     execute(delta, time) {
         this.queries.entities.results.forEach(ent => {
-            let keys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','d','w','s','q','e',' ']
+            let keys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','d','w','s','q','e','t',' ']
             let controls = ent.getComponent(KeyboardControls);
             keys.forEach(key => {
                 if(this.is_keydown(key) && controls.mapping[key])
