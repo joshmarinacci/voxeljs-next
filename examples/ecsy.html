@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <link rel="stylesheet" href="../src/ecsy/fullscreen.css">
+    <link rel="stylesheet" href="../src/ecsy/webxr.css">
     <style type="text/css">
         html, body {
             padding: 0;
@@ -59,7 +61,6 @@
         Parent,
         Transform,
         Object3D,
-
     } from '../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js';
     import * as util from "../src/utils.js"
     import {MouseCursor, MouseSystem} from '../src/ecsy/mouse.js'
@@ -67,6 +68,8 @@
     import {VoxelLandscape, VoxelSystem, VoxelTextures} from '../src/ecsy/voxels.js'
     import {ActiveBlock, Highlight, HighlightSystem} from '../src/ecsy/highlight.js'
     import {StagePosition, StageRotation} from '../src/ecsy/camera_gimbal.js'
+    import {WebXRSystem, WebXRButton} from '../src/ecsy/webxr.js'
+    import {FullscreenSystem, FullscreenButton} from '../src/ecsy/fullscreen.js'
 
 
     class DomDashboard extends Component {
@@ -165,11 +168,21 @@
     world.registerSystem(MouseSystem)
     world.registerSystem(HighlightSystem)
     world.registerSystem(DashboardDOMOvleraySystem)
+    world.registerSystem(WebXRSystem);
+    world.registerSystem(FullscreenSystem);
 
     // Initialize the default sets of highlights and systems
     let data = initialize(world);
     let {scene, renderer, camera} = data.entities;
     console.log("got it",data)
+
+    // Modify the position for the default camera
+    // let transform = camera.getMutableComponent(Transform);
+    // transform.position.z = 5;
+
+    scene.addComponent(FullscreenButton);
+    scene.addComponent(WebXRButton);
+
 
 
     new TextureLoader().load('./dummy.jpg')
