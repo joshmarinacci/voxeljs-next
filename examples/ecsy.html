@@ -38,11 +38,35 @@
     import {VoxelLandscape, VoxelSystem, VoxelTextures} from '../src/ecsy/voxels.js'
     import {ActiveBlock, Highlight, HighlightSystem} from '../src/ecsy/highlight.js'
     import {StagePosition, StageRotation} from '../src/ecsy/camera_gimbal.js'
-    import {WebXRSystem, WebXRButton} from '../src/ecsy/webxr.js'
+    import {WebXRSystem, WebXRButton, WebXRController} from '../src/ecsy/webxr.js'
     import {FullscreenSystem, FullscreenButton} from '../src/ecsy/fullscreen.js'
     import {DashboardDOMOvleraySystem, DomDashboard, DashboardVisible} from "../src/ecsy/dashboard.js"
 
 
+    class VoxelWebXRControllerSystem extends System {
+        execute(delta, time) {
+            this.queries.controllers.added.forEach(ent => {
+                let con = ent.getComponent(WebXRController);
+                let mesh2 = new Mesh(
+                    new CubeGeometry(1.1,0.1,0.1),
+                    new MeshLambertMaterial({
+                        color:'yellow',
+                    }));
+                ent.addComponent(Transform)
+                ent.addComponent(Object3D, {value: mesh2})
+                ent.addComponent(Parent, con.controller)
+            })
+        }
+    }
+    VoxelWebXRControllerSystem.queries = {
+        controllers: {
+            components:[WebXRController],
+            listen: {
+                added:true,
+                removed:true,
+            }
+        },
+    }
 
 
     const Y_AXIS = new Vector3(0,1,0)

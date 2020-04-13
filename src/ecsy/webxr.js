@@ -59,6 +59,18 @@ export class WebXRSystem extends System {
                 console.log("does not have webxr");
             }
         })
+        this.queries.controllers.added.forEach(ent => {
+            const con = ent.getMutableComponent(WebXRController)
+            // const domElement = document.querySelector("canvas")
+
+            con.controller = renderer.xr.getController(con.index)
+            con.controller.addEventListener('selectstart', (evt)=>{
+                console.log("controller select start")
+            });
+            con.controller.addEventListener('selectend', (evt)=>{
+                console.log("controller select end")
+            });
+        })
     }
 }
 WebXRSystem.queries = {
@@ -74,5 +86,22 @@ WebXRSystem.queries = {
             added:true,
             removed:false,
         }
+    },
+    controllers: {
+        components: [WebXRController],
+        listen: {
+            added: true,
+            removed: true
+        }
+    },
+}
+
+export class WebXRController {
+    constructor() {
+        this.controller = null
+        this.index = -1
     }
 }
+
+
+
