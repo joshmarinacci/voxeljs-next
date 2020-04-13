@@ -56,6 +56,12 @@
                 ent.addComponent(Object3D, {value: mesh2})
                 ent.addComponent(Parent, con.controller)
             })
+            this.queries.controllers.results.forEach(ent => {
+                let con = ent.getComponent(WebXRController)
+                if(con.selected) {
+                    console.log("xr is pressed ", con.index)
+                }
+            })
         }
     }
     VoxelWebXRControllerSystem.queries = {

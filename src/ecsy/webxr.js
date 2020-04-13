@@ -66,9 +66,11 @@ export class WebXRSystem extends System {
             con.controller = renderer.xr.getController(con.index)
             con.controller.addEventListener('selectstart', (evt)=>{
                 console.log("controller select start")
+                con.selected = true
             });
             con.controller.addEventListener('selectend', (evt)=>{
                 console.log("controller select end")
+                con.selected = false
             });
         })
     }
@@ -100,6 +102,7 @@ export class WebXRController {
     constructor() {
         this.controller = null
         this.index = -1
+        this.selected = false
     }
 }
 
