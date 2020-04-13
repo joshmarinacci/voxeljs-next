@@ -1,0 +1,31 @@
+
+div.dom-dashboard {
+    border: 5px solid black;
+    z-index: 10;
+    position: fixed;
+    top: 10vh;
+    left: 10vw;
+    right: 10vw;
+    bottom: 10vh;
+    background: white;
+    opacity: 0.8;
+    display: none;
+}
+div.dom-dashboard img {
+    width: 10vw;
+    image-rendering: crisp-edges;
+    border: 5px solid black;
+    padding: 5px;
+    margin: 5px;
+    background-color: white;
+}
+div.dom-dashboard.visible {
+    display: block;
+}
+div.dom-dashboard button {
+    position: absolute;
+    bottom:0;
+    right:0;
+    font-size: 200%;
+}
+

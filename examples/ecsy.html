@@ -5,43 +5,13 @@
     <title>Title</title>
     <link rel="stylesheet" href="../src/ecsy/fullscreen.css">
     <link rel="stylesheet" href="../src/ecsy/webxr.css">
+    <link rel="stylesheet" href="../src/ecsy/dashboard.css">
     <style type="text/css">
         html, body {
             padding: 0;
             margin:0;
             overflow: hidden;
         }
-
-        div.dom-dashboard {
-            border: 5px solid black;
-            z-index: 10;
-            position: fixed;
-            top: 10vh;
-            left: 10vw;
-            right: 10vw;
-            bottom: 10vh;
-            background: white;
-            opacity: 0.8;
-            display: none;
-        }
-        div.dom-dashboard img {
-            width: 10vw;
-            image-rendering: crisp-edges;
-            border: 5px solid black;
-            padding: 5px;
-            margin: 5px;
-            background-color: white;
-        }
-        div.dom-dashboard.visible {
-            display: block;
-        }
-        div.dom-dashboard button {
-            position: absolute;
-            bottom:0;
-            right:0;
-            font-size: 200%;
-        }
-
     </style>
 </head>
 <body>
@@ -70,89 +40,8 @@
     import {StagePosition, StageRotation} from '../src/ecsy/camera_gimbal.js'
     import {WebXRSystem, WebXRButton} from '../src/ecsy/webxr.js'
     import {FullscreenSystem, FullscreenButton} from '../src/ecsy/fullscreen.js'
+    import {DashboardDOMOvleraySystem, DomDashboard, DashboardVisible} from "../src/ecsy/dashboard.js"
 
-
-    class DomDashboard extends Component {
-        constructor() {
-            super();
-            this.domElement = null
-        }
-    }
-
-    class DashboardVisible extends Component {
-
-    }
-
-    class DashboardDOMOvleraySystem extends System {
-        execute(delta, time) {
-            this.queries.dash.added.forEach(me=>{
-                const dash = me.getComponent(DomDashboard);
-                let div = document.createElement('div');
-                div.classList.add("dom-dashboard");
-                div.addEventListener('mousedown',e => e.stopPropagation());
-                div.addEventListener('mouseup',e => e.stopPropagation());
-                div.addEventListener('mousemove',e => e.stopPropagation());
-                document.documentElement.append(div)
-
-                this.queries.textures.results.forEach(ent => {
-                    console.log("textures are", ent.getComponent(VoxelTextures))
-                    let texs = ent.getComponent(VoxelTextures).textures
-                    texs.forEach((tex,i) => {
-                        console.log("adding texture",tex);
-                        let img = document.createElement('img')
-                        img.src = tex.src;
-                        div.append(img);
-                        img.addEventListener('click',(e)=>{
-                            e.preventDefault();
-                            e.stopPropagation()
-                            console.log(`chose this image ${i}`,i)
-                            this.queries.active.results.forEach(ent=>{
-                                ent.getMutableComponent(ActiveBlock).type = i
-                            })
-                        })
-                    })
-                })
-                let dismiss = document.createElement('button');
-                dismiss.innerHTML = "dismiss"
-                dismiss.addEventListener('click',()=>{
-                    this.queries.visible.results.forEach(ent => {
-                        ent.removeComponent(DashboardVisible)
-                    })
-                })
-                div.append(dismiss)
-                dash.domElement = div
-            })
-            this.queries.visible.added.forEach(ent => {
-                console.log("made visible")
-                ent.getMutableComponent(DomDashboard).domElement.classList.add('visible')
-            })
-            this.queries.visible.removed.forEach(ent => {
-                console.log("made in-visible")
-                ent.getMutableComponent(DomDashboard).domElement.classList.remove('visible')
-            })
-        }
-    }
-    DashboardDOMOvleraySystem.queries = {
-        dash: {
-            components:[DomDashboard],
-            listen: {
-                added:true,
-            }
-        },
-        visible: {
-            components:[DashboardVisible, DomDashboard],
-            listen: {
-                added:true,
-                removed:true,
-            }
-        },
-        textures: {
-            components:[VoxelTextures],
-        },
-        active: {
-            components:[ActiveBlock]
-        },
-    }
 
 
 
