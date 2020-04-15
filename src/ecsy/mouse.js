@@ -1,5 +1,6 @@
 import {Component, System} from '../../node_modules/ecsy/build/ecsy.module.js?module'
 import {Vector2} from '../../node_modules/three/build/three.module.js'
+import {InputFrame} from './input.js'
 
 export class MouseCursor extends Component {
     constructor() {
@@ -9,40 +10,55 @@ export class MouseCursor extends Component {
         this.down = false
     }
 }
-class MouseDown extends Component {}
-export class MouseDownTrigger extends Component {}
-class MouseUpTrigger extends Component {}
-class MouseUp extends Component {}
 export class MouseSystem extends System {
+    _mouse_down(e) {
+        this.pressed = true
+        this.buttons = e.buttons
+        this.start_point = this.last_point.clone()
+        this.queries.inputs.results.forEach(ent => {
+            let input = ent.getMutableComponent(InputFrame)
+            input.state[InputFrame.ROTATION_DRAGGING] = true
+            this.start_angle = input.state[InputFrame.ROTATION_ANGLE]
+        })
+
+    }
+    _mouse_move(e) {
+        this.last_point = new Vector2(e.clientX,e.clientY)
+        if(this.pressed) {
+            let diff = this.last_point.clone().sub(this.start_point)
+            let new_angle = this.start_angle - 0.003*diff.x
+            this.queries.inputs.results.forEach(ent => {
+                let input = ent.getMutableComponent(InputFrame)
+                input.state[InputFrame.ROTATION_ANGLE] = new_angle
+            })
+        }
+    }
+    _mouse_up(e) {
+        this.pressed = false
+        let diff = this.last_point.clone().sub(this.start_point)
+        this.queries.inputs.results.forEach(ent => {
+            let input = ent.getMutableComponent(InputFrame)
+            input.state[InputFrame.ROTATION_DRAGGING] = false
+            if(Math.abs(diff.x) < 10) {
+                if(this.buttons === 1) {
+                    input.state[InputFrame.CREATE_AT_CURSOR] = true
+                }
+                if(this.buttons === 2) {
+                    input.state[InputFrame.DESTROY_AT_CURSOR] = true
+                }
+
+            }
+        })
+    }
     init() {
         this.last_point = new Vector2(200,200)
         document.addEventListener('contextmenu',e => {
             e.preventDefault()
             e.stopPropagation()
         })
-        document.addEventListener('mousemove',e => {
-            this.last_point = new Vector2(e.clientX,e.clientY)
-        })
-        document.addEventListener('mousedown', e=> {
-            this.queries.targets.results.forEach(ent=>{
-                let cur = ent.getMutableComponent(MouseCursor)
-                if(cur.down === false) {
-                    ent.addComponent(MouseDownTrigger)
-                }
-                cur.down = true
-                cur.buttons = e.buttons
-            })
-        })
-        document.addEventListener('mouseup',e => {
-            this.queries.targets.results.forEach(ent=>{
-                let cur = ent.getMutableComponent(MouseCursor)
-                if(cur.down === true) {
-                    ent.addComponent(MouseUpTrigger)
-                }
-                cur.down = false
-                cur.buttons = e.buttons
-            })
-        })
+        document.addEventListener('mousemove',(e)=>this._mouse_move(e))
+        document.addEventListener('mousedown', (e)=>this._mouse_down(e))
+        document.addEventListener('mouseup', (e)=>this._mouse_up(e))
     }
     execute(delta,time) {
         this.queries.targets.results.forEach(ent => {
@@ -53,5 +69,8 @@ export class MouseSystem extends System {
 MouseSystem.queries = {
     targets: {
         components: [MouseCursor]
+    },
+    inputs: {
+        components: [InputFrame],
     }
 }

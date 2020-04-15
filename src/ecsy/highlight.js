@@ -4,8 +4,9 @@ import {Quaternion, Ray, Vector2, Vector3} from '../../node_modules/three/build/
 import {Camera, Object3D, Transform} from '../../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js'
 import {traceRay} from "../raycast.js"
 import {StagePosition, StageRotation} from './camera_gimbal.js'
-import {MouseCursor, MouseDownTrigger} from './mouse.js'
+import {MouseCursor} from './mouse.js'
 import {VoxelLandscape} from './voxels.js'
+import {InputFrame} from './input.js'
 
 export class Highlight {
 }
@@ -76,27 +77,25 @@ export class HighlightSystem extends System {
                     tran.position.copy(res.hitPosition)
 
                     //if left button
-                    if(mousEnt.hasComponent(MouseDownTrigger)) {
-                        mousEnt.removeComponent(MouseDownTrigger)
-                        let md = mousEnt.getComponent(MouseCursor)
-                        let pos = res.hitPosition.clone()
-                        if(md.buttons === 1){
+                    this.queries.inputs.results.forEach(ent => {
+                        let input = ent.getComponent(InputFrame)
+                        if(input.state[InputFrame.CREATE_AT_CURSOR] === true) {
+                            let pos = res.hitPosition.clone()
                             pos.add(res.hitNormal)
                             pos.floor()
                             let active = this.queries.active.results[0]
                             landscape.chunkManager.setVoxelAtCoordinates(pos,active.getComponent(ActiveBlock).type)
                         }
-                        if(md.buttons === 2) {
-                            // pos.add(res.hitNormal)
+                        input.state[InputFrame.CREATE_AT_CURSOR] = false
+                        if(input.state[InputFrame.DESTROY_AT_CURSOR] === true) {
+                            let pos = res.hitPosition.clone()
                             pos.floor()
                             landscape.chunkManager.setVoxelAtCoordinates(pos,0)
                         }
-                    }
+                        input.state[InputFrame.DESTROY_AT_CURSOR] = false
+                    })
                 })
             })
-        })
-        this.queries.mouse_down.added.forEach(me=>{
-            console.log("a mouse down happened");
         })
     }
 }
@@ -105,12 +104,7 @@ HighlightSystem.queries = {
     stagePos: { components: [StagePosition]},
     stageRot: { components: [StageRotation]},
     mouse: { components:[MouseCursor] },
-    mouse_down: {
-        components:[MouseCursor,MouseDownTrigger],
-        listen: {
-            added:[MouseDownTrigger]
-        }
-    },
+    inputs: { components:[InputFrame]},
     camera: { components:[Camera] },
     landscape: { components:[VoxelLandscape]},
     active: { components:[ActiveBlock]}

@@ -35,6 +35,10 @@ InputFrame.MOVE_BACKWARD = 'MOVE_BACKWARD'
 InputFrame.ROTATE_LEFT = 'ROTATE_LEFT'
 InputFrame.ROTATE_RIGHT = 'ROTATE_RIGHT'
 InputFrame.OPEN_DASHBOARD = 'OPEN_DASHBOARD'
+InputFrame.ROTATION_DRAGGING = 'ROTATION_DRAGGING'
+InputFrame.ROTATION_ANGLE = 'ROTATION_ANGLE'
+InputFrame.CREATE_AT_CURSOR = 'CREATE_AT_CURSOR'
+InputFrame.DESTROY_AT_CURSOR = 'DESTROY_AT_CURSOR'
 
 const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
@@ -49,12 +53,18 @@ export class VoxelPlayerSystem extends System {
             this.queries.stageRot.results.forEach(ent => {
                 let rot_trans = ent.getMutableComponent(Transform)
                 if (input.state[InputFrame.ROTATE_LEFT] === true) {
-                    rot_trans.rotation.y -= 0.1
+                    rot_trans.rotation.y -= 0.05
                 }
                 if (input.state[InputFrame.ROTATE_RIGHT] === true) {
-                    rot_trans.rotation.y += 0.1
+                    rot_trans.rotation.y += 0.05
+                }
+                if (input.state[InputFrame.ROTATION_DRAGGING] === true) {
+                    rot_trans.rotation.y = input.state[InputFrame.ROTATION_ANGLE]
+                } else {
+                    input.state[InputFrame.ROTATION_ANGLE] = rot_trans.rotation.y
                 }
             })
+
             this.queries.stagePos.results.forEach(ent => {
                 if(input.state[InputFrame.MOVE_FORWARD] === true) {
                     let stageRot = ent.getComponent(Parent).value
