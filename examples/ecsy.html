@@ -34,13 +34,14 @@
     } from '../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js';
     import * as util from "../src/utils.js"
     import {MouseCursor, MouseSystem} from '../src/ecsy/mouse.js'
-    import {KeyboardControls, KeyboardSystem} from '../src/ecsy/keyboard.js'
+    import {KeyboardBindingSet, KeyboardSystem} from '../src/ecsy/keyboard.js'
     import {VoxelLandscape, VoxelSystem, VoxelTextures} from '../src/ecsy/voxels.js'
     import {ActiveBlock, Highlight, HighlightSystem} from '../src/ecsy/highlight.js'
     import {StagePosition, StageRotation} from '../src/ecsy/camera_gimbal.js'
     import {WebXRSystem, WebXRButton, WebXRController} from '../src/ecsy/webxr.js'
     import {FullscreenSystem, FullscreenButton} from '../src/ecsy/fullscreen.js'
     import {DashboardDOMOvleraySystem, DomDashboard, DashboardVisible} from "../src/ecsy/dashboard.js"
+    import {InputFrame, VoxelPlayerSystem} from '../src/ecsy/input.js'
 
 
     class VoxelWebXRControllerSystem extends System {
@@ -75,9 +76,6 @@
     }
 
 
-    const Y_AXIS = new Vector3(0,1,0)
-    const SPEED = 0.1
-
     // Create a new world to hold all our highlights and systems
     let world = new World();
 
@@ -89,6 +87,7 @@
     world.registerSystem(DashboardDOMOvleraySystem)
     world.registerSystem(WebXRSystem);
     world.registerSystem(FullscreenSystem);
+    world.registerSystem(VoxelPlayerSystem)
 
     // Initialize the default sets of highlights and systems
     let data = initialize(world);
@@ -99,9 +98,22 @@
     // let transform = camera.getMutableComponent(Transform);
     // transform.position.z = 5;
 
-    scene.addComponent(FullscreenButton);
-    scene.addComponent(WebXRButton);
+    scene.addComponent(FullscreenButton)
+    scene.addComponent(WebXRButton)
+    scene.addComponent(InputFrame)
 
+    // the binding keys match dom keyboard events
+    world.createEntity()
+        .addComponent(KeyboardBindingSet, {bindings: {
+                'a': InputFrame.LEFT_STRAFE,
+                'ArrowLeft': InputFrame.LEFT_STRAFE,
+                'd': InputFrame.RIGHT_STRAFE,
+                'ArrowRight': InputFrame.RIGHT_STRAFE,
+                'w': InputFrame.MOVE_FORWARD,
+                's': InputFrame.MOVE_BACKWARD,
+                'ArrowUp': InputFrame.MOVE_FORWARD,
+                'ArrowDown': InputFrame.MOVE_BACKWARD,
+            }})
 
 
     new TextureLoader().load('./dummy.jpg')
@@ -119,16 +131,6 @@
         .addComponent(Object3D, {value: new Group()})
         .addComponent(Transform)
         .addComponent(Parent, {value: scene})
-        .addComponent(KeyboardControls, { mapping: {
-                ArrowLeft:(ent) => {
-                    let trans = ent.getMutableComponent(Transform)
-                    trans.rotation.y -= util.toRad(3)
-                },
-                ArrowRight: (ent) => {
-                    let trans = ent.getMutableComponent(Transform)
-                    trans.rotation.y += util.toRad(3)
-                }
-            }})
         .addComponent(StageRotation) // StageRotation is how the rest of the system can use this
 
     // a position for moving the world around
@@ -136,38 +138,6 @@
         .addComponent(Object3D, {value: new Group})
         .addComponent(Transform)
         .addComponent(Parent, {value:stageRot})
-        .addComponent(KeyboardControls, { mapping: {
-                ArrowUp:(ent) => {
-                    let trans = ent.getMutableComponent(Transform)
-                    let stageRot = ent.getComponent(Parent).value
-                    const dir = new Vector3(0,0,1)
-                    dir.applyAxisAngle(Y_AXIS, -stageRot.getComponent(Transform).rotation.y)
-                    let d2 = dir.normalize().multiplyScalar(SPEED)
-                    const vel = d2.multiplyScalar(4)
-                    trans.position.x += vel.x;
-                    trans.position.z += vel.z;
-                },
-                ArrowDown: (ent) => {
-                    let trans = ent.getMutableComponent(Transform)
-                    let stageRot = ent.getComponent(Parent).value
-                    const dir = new Vector3(0,0,1)
-                    dir.applyAxisAngle(Y_AXIS, -stageRot.getComponent(Transform).rotation.y)
-                    let d2 = dir.normalize().multiplyScalar(SPEED)
-                    const vel = d2.multiplyScalar(-4)
-                    trans.position.x += vel.x;
-                    trans.position.z += vel.z;
-                },
-                a:(ent) => {
-                    console.log("slide left");
-                },
-                d:(ent) => {
-                    console.log("slide right");
-                },
-                t:(ent) => {
-                    console.log("need to show the dashboard")
-                    dashboard.addComponent(DashboardVisible)
-                }
-            }})
         .addComponent(StagePosition) // StagePosition
 
     //make the actual landscape

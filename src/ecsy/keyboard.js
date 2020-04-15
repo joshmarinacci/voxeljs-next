@@ -1,45 +1,44 @@
 import {Component, System} from '../../node_modules/ecsy/build/ecsy.module.js?module'
+import {InputFrame} from './input.js'
 
-export class KeyboardControls extends Component {
+export class KeyboardBindingSet extends Component {
     constructor() {
         super();
-        this.mapping = {}
+        this.bindings = {}
     }
 }
+
 export class KeyboardSystem extends System {
+    _setBindingValue(keyboard_key, new_value) {
+        this.queries.bindings.results.forEach(ent => {
+            let binding = ent.getComponent(KeyboardBindingSet)
+            if(binding.bindings[keyboard_key]) {
+                let state_key = binding.bindings[keyboard_key]
+                console.log("found binding",keyboard_key, state_key)
+                this.queries.inputs.results.forEach(ent => {
+                    let input = ent.getMutableComponent(InputFrame)
+                    input.state[state_key] = new_value
+                })
+            }
+        })
+    }
+
+    _keydown(e) {
+        this._setBindingValue(e.key,true);
+    }
+    _keyup(e) {
+        this._setBindingValue(e.key,false);
+    }
     init() {
-        this.keystates = {}
-        console.log("initted keyboard system");
         document.addEventListener('keydown',this._keydown.bind(this));
         document.addEventListener('keyup',this._keyup.bind(this));
     }
-    _keydown(e) {
-        // console.log("key down",e)
-        if(!this.keystates[e.key]) this.keystates[e.key] = { pressed:false}
-        this.keystates[e.key].pressed = true
-    }
-    _keyup(e) {
-        // console.log("key up",e)
-        if(!this.keystates[e.key]) this.keystates[e.key] = { pressed:false}
-        this.keystates[e.key].pressed = false
-    }
-    is_keydown(name) {
-        if(this.keystates[name]) return this.keystates[name].pressed
-        return false
-    }
-    execute(delta, time) {
-        this.queries.entities.results.forEach(ent => {
-            let keys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','a','d','w','s','q','e','t',' ']
-            let controls = ent.getComponent(KeyboardControls);
-            keys.forEach(key => {
-                if(this.is_keydown(key) && controls.mapping[key])
-                    controls.mapping[key](ent)
-            })
-        })
-    }
 }
 KeyboardSystem.queries = {
-    entities: {
-        components: [KeyboardControls]
+    bindings: {
+        components:[KeyboardBindingSet]
+    },
+    inputs: {
+        components: [InputFrame],
     }
 }
