@@ -34,6 +34,7 @@ InputFrame.MOVE_FORWARD = 'MOVE_FORWARD'
 InputFrame.MOVE_BACKWARD = 'MOVE_BACKWARD'
 InputFrame.ROTATE_LEFT = 'ROTATE_LEFT'
 InputFrame.ROTATE_RIGHT = 'ROTATE_RIGHT'
+InputFrame.OPEN_DASHBOARD = 'OPEN_DASHBOARD'
 
 const Y_AXIS = new Vector3(0,1,0)
 const SPEED = 0.1
@@ -99,41 +100,7 @@ export class VoxelPlayerSystem extends System {
         })
     }
 }
-/*
-        .addComponent(KeyboardControls, { mapping: {
-                ArrowUp:(ent) => {
-                    let trans = ent.getMutableComponent(Transform)
-                    let stageRot = ent.getComponent(Parent).value
-                    const dir = new Vector3(0,0,1)
-                    dir.applyAxisAngle(Y_AXIS, -stageRot.getComponent(Transform).rotation.y)
-                    let d2 = dir.normalize().multiplyScalar(SPEED)
-                    const vel = d2.multiplyScalar(4)
-                    trans.position.x += vel.x;
-                    trans.position.z += vel.z;
-                },
-                ArrowDown: (ent) => {
-                    let trans = ent.getMutableComponent(Transform)
-                    let stageRot = ent.getComponent(Parent).value
-                    const dir = new Vector3(0,0,1)
-                    dir.applyAxisAngle(Y_AXIS, -stageRot.getComponent(Transform).rotation.y)
-                    let d2 = dir.normalize().multiplyScalar(SPEED)
-                    const vel = d2.multiplyScalar(-4)
-                    trans.position.x += vel.x;
-                    trans.position.z += vel.z;
-                },
-                a:(ent) => {
-                    console.log("slide left");
-                },
-                d:(ent) => {
-                    console.log("slide right");
-                },
-                t:(ent) => {
-                    console.log("need to show the dashboard")
-                    dashboard.addComponent(DashboardVisible)
-                }
-            }})
 
- */
 VoxelPlayerSystem.queries = {
     inputs: {
         components: [InputFrame],

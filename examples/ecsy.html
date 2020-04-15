@@ -100,6 +100,7 @@
 
     scene.addComponent(FullscreenButton)
     scene.addComponent(WebXRButton)
+    // one InputFrame is required for all inputs to work
     scene.addComponent(InputFrame)
 
     // the binding keys match dom keyboard events
@@ -113,6 +114,7 @@
                 's': InputFrame.MOVE_BACKWARD,
                 'ArrowUp': InputFrame.MOVE_FORWARD,
                 'ArrowDown': InputFrame.MOVE_BACKWARD,
+                'e': InputFrame.OPEN_DASHBOARD,
             }})
 
 
@@ -120,8 +122,7 @@
 
 
     // add a dashboard to the scene
-    let dashboard = scene.addComponent(DomDashboard)
-        .addComponent(DashboardVisible)
+    scene.addComponent(DomDashboard)
 
     //set the active block to type 3 (TNT)
     scene.addComponent(ActiveBlock, {type:3})

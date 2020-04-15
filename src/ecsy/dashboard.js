@@ -1,6 +1,7 @@
 import { Component, System, World } from '../../node_modules/ecsy/build/ecsy.module.js?module';
 import {VoxelLandscape, VoxelSystem, VoxelTextures} from '../ecsy/voxels.js'
 import {ActiveBlock, Highlight, HighlightSystem} from '../ecsy/highlight.js'
+import {InputFrame} from './input.js'
 
 export class DomDashboard extends Component {
     constructor() {
@@ -52,6 +53,16 @@ export class DashboardDOMOvleraySystem extends System {
             div.append(dismiss)
             dash.domElement = div
         })
+        this.queries.input.results.forEach(ent => {
+            let input = ent.getComponent(InputFrame)
+            if (input.state[InputFrame.OPEN_DASHBOARD] === true) {
+                this.queries.dash.results.forEach(dash_ent => {
+                    if(!dash_ent.hasComponent(DashboardVisible)) {
+                        dash_ent.addComponent(DashboardVisible)
+                    }
+                })
+            }
+        })
         this.queries.visible.added.forEach(ent => {
             console.log("made visible")
             ent.getMutableComponent(DomDashboard).domElement.classList.add('visible')
@@ -75,6 +86,9 @@ DashboardDOMOvleraySystem.queries = {
             added:true,
             removed:true,
         }
+    },
+    input: {
+        components:[InputFrame]
     },
     textures: {
         components:[VoxelTextures],

@@ -14,7 +14,6 @@ export class KeyboardSystem extends System {
             let binding = ent.getComponent(KeyboardBindingSet)
             if(binding.bindings[keyboard_key]) {
                 let state_key = binding.bindings[keyboard_key]
-                console.log("found binding",keyboard_key, state_key)
                 this.queries.inputs.results.forEach(ent => {
                     let input = ent.getMutableComponent(InputFrame)
                     input.state[state_key] = new_value
