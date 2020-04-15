@@ -11,6 +11,14 @@ export class WebXRButton extends Component {
     }
 }
 
+export class WebXRController extends Component {
+    constructor() {
+        super()
+        this.controller = null
+        this.index = -1
+        this.selected = false
+    }
+}
 export class WebXRSystem extends System {
     enterWebXR(ent) {
         console.log('trying to enter webxr')
@@ -98,13 +106,6 @@ WebXRSystem.queries = {
     },
 }
 
-export class WebXRController {
-    constructor() {
-        this.controller = null
-        this.index = -1
-        this.selected = false
-    }
-}
 
 
 
