@@ -11,7 +11,7 @@ import {
     MeshNormalMaterial,
     Float32BufferAttribute,
     BufferAttribute,
-} from "../node_modules/three/build/three.module.js"
+} from "three"
 
 
 function generateAmbientOcclusion(grid) {

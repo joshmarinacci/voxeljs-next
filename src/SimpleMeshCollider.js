@@ -1,4 +1,4 @@
-import {Vector3, Box3} from "../node_modules/three/build/three.module.js"
+import {Vector3, Box3} from "three"
 
 const SIZE = new Vector3()
 const CENTER = new Vector3()

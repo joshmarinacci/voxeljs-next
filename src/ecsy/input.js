@@ -1,11 +1,11 @@
-import {Component, System} from '../../node_modules/ecsy/build/ecsy.module.js?module'
+import {Component, System} from 'ecsy'
 import {StagePosition, StageRotation} from './camera_gimbal.js'
 import {
     initialize,
     Parent,
     Transform,
     Object3D,
-} from '../../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js';
+} from 'ecsy-three';
 import {Group,
     Vector3,
     TextureLoader,
@@ -13,7 +13,7 @@ import {Group,
     MeshLambertMaterial,
     Mesh,
     AmbientLight,
-} from '../../node_modules/three/build/three.module.js';
+} from 'three';
 
 export class InputFrame extends Component {
     constructor() {

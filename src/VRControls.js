@@ -1,5 +1,5 @@
-import {Vector3,} from "../node_modules/three/build/three.module.js"
-import {Pointer, POINTER_CLICK} from "../node_modules/webxr-boilerplate/Pointer.js"
+import {Vector3,} from "three"
+import {Pointer, POINTER_CLICK} from "./webxr-boilerplate/Pointer"
 import {traceRay} from "./raycast.js"
 import {ECSComp} from './ECSComp.js'
 import {DIRS, toRad} from "./utils.js"
@@ -17,6 +17,7 @@ export class VRControls extends ECSComp {
         this.app = app
         this.distance = 30
         this.states = { touchpad: false}
+        
         this.pointer = new Pointer(app,{
             //don't intersect with anything. only use for orientation and trigger state
             intersectionFilter: o => false,

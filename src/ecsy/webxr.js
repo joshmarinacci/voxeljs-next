@@ -1,4 +1,4 @@
-import { Component, System, World } from '../../node_modules/ecsy/build/ecsy.module.js?module';
+import { Component, System, World } from 'ecsy';
 import {FullscreenMode} from './fullscreen.js'
 
 export class WebXRActive extends Component {

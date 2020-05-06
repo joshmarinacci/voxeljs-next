@@ -1,7 +1,7 @@
 import * as util from "../utils.js"
-import {System} from '../../node_modules/ecsy/build/ecsy.module.js?module'
-import {Quaternion, Ray, Vector2, Vector3} from '../../node_modules/three/build/three.module.js'
-import {Camera, Object3D, Transform} from '../../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js'
+import {System} from 'ecsy'
+import {Quaternion, Ray, Vector2, Vector3} from 'three'
+import {Camera, Object3D, Transform} from 'ecsy-three'
 import {traceRay} from "../raycast.js"
 import {StagePosition, StageRotation} from './camera_gimbal.js'
 import {MouseCursor} from './mouse.js'

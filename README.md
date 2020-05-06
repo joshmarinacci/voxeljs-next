@@ -25,9 +25,9 @@ First install the dependencies using npm
 
 ```shell script
 npm install
+npm start
+open http://localhost:8080
 ```
-
-Then open `examples/ecsy.html` in your browser.
 
 # old stuff
 

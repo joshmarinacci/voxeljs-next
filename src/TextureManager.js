@@ -4,7 +4,7 @@ import {
     ShaderMaterial,
     Texture,
     VertexColors
-} from "../node_modules/three/build/three.module.js"
+} from "three"
 
 // const createAtlas = window.atlaspack
 

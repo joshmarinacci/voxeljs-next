@@ -1,6 +1,6 @@
-import { Component, System, World } from '../../node_modules/ecsy/build/ecsy.module.js?module';
-import {VoxelLandscape, VoxelSystem, VoxelTextures} from '../ecsy/voxels.js'
-import {ActiveBlock, Highlight, HighlightSystem} from '../ecsy/highlight.js'
+import { Component, System, World } from 'ecsy';
+import {VoxelLandscape, VoxelSystem, VoxelTextures} from './voxels.js'
+import {ActiveBlock, Highlight, HighlightSystem} from './highlight.js'
 import {InputFrame} from './input.js'
 
 export class DomDashboard extends Component {
