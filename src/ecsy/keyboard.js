@@ -1,4 +1,4 @@
-import {Component, System} from '../../node_modules/ecsy/build/ecsy.module.js?module'
+import {Component, System} from 'ecsy'
 import {InputFrame} from './input.js'
 
 export class KeyboardBindingSet extends Component {

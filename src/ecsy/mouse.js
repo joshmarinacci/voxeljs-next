@@ -1,5 +1,5 @@
-import {Component, System} from '../../node_modules/ecsy/build/ecsy.module.js?module'
-import {Vector2} from '../../node_modules/three/build/three.module.js'
+import {Component, System} from 'ecsy'
+import {Vector2} from 'three'
 import {InputFrame} from './input.js'
 
 export class MouseCursor extends Component {

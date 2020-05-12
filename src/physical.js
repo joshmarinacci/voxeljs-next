@@ -1,5 +1,5 @@
 // module.exports = physical
-import {AABB as aabb} from "./aabb.js"
+//import {AABB as aabb} from "./aabb.js"
 import {Vector3} from "three"
 
 // make these *once*, so we're not generating

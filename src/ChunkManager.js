@@ -1,6 +1,6 @@
-import {Vector3,} from "../node_modules/three/build/three.module.js"
-import {CulledMesher} from "../src/CulledMesher.js"
-import {VoxelMesh} from "../src/VoxelMesh.js"
+import {Vector3,} from "three"
+import {CulledMesher} from "./CulledMesher.js"
+import {VoxelMesh} from "./VoxelMesh.js"
 
 class Chunk {
     constructor(data, pos, chunkBits) {

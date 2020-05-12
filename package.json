@@ -1,29 +1,47 @@
 {
   "name": "voxeljs-next",
-  "version": "0.0.1",
+  "version": "0.0.13",
   "description": "The next generation of Voxel JS.",
-  "main": "src/ChunkManager.js",
+  "main": "dist/voxeljs-next.js",
+  "module": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublish": "npm run build",
+    "start": "webpack-dev-server --mode development",
+    "nuke": "rm package-lock.json && rm -rf dist && rm -rf node_modules && rm -rf examples/node_modules",
+    "build": "cd examples && npm i && cd .. && LIBRARY=true webpack"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/joshmarinacci/voxeljs-next.git"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Josh Marinacci",
+  "license": "BSD3",
   "bugs": {
     "url": "https://github.com/joshmarinacci/voxeljs-next/issues"
   },
+  "files": [
+    "src",
+    "dist/voxeljs-next.js",
+    "dist/voxeljs-next.js.map"
+  ],
   "homepage": "https://github.com/joshmarinacci/voxeljs-next#readme",
-  "dependencies": {
-    "atlaspack": "^1.0.0",
+  "peerDependencies": {
+    "three": "^0.116.1",
+    "ecsy": "^0.2.3",
+    "ecsy-three": "^0.1.0"
+  },
+  "devDependencies": {
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "^5.1.1",
+    "css-loader": "^3.5.3",
     "ecsy": "^0.2.3",
     "ecsy-three": "^0.1.0",
-    "pubnub": "^4.23.0",
-    "three": "^0.114.0",
-    "threejs-2d-components": "0.0.4",
-    "webrtc-sdk": "^2.2.5",
-    "webxr-boilerplate": "^0.2.3"
-  }
+    "html-webpack-plugin": "^4.3.0",
+    "style-loader": "^1.2.1",
+    "three": "^0.116.1",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
+  },
+  "dependencies": {}
 }

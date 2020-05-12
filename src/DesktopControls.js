@@ -1,5 +1,5 @@
-import {Vector2} from "../node_modules/three/build/three.module.js"
-import {Pointer} from "../node_modules/webxr-boilerplate/Pointer.js"
+import {Vector2} from "three"
+import {Pointer} from "./webxr-boilerplate/Pointer"
 import {ECSComp} from './ECSComp.js'
 import {traceRayAtScreenCoords} from './utils.js'
 

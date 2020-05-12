@@ -1,4 +1,4 @@
-import { Component, System, World } from '../../node_modules/ecsy/build/ecsy.module.js?module';
+import { Component, System, World } from 'ecsy';
 
 export class FullscreenMode extends Component {
 

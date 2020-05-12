@@ -1,10 +1,10 @@
 import {TextureManager} from '../TextureManager.js'
-import {Component, System} from '../../node_modules/ecsy/build/ecsy.module.js?module'
+import {Component, System} from 'ecsy'
 import {ChunkManager} from "../ChunkManager.js"
 import {CulledMesher} from "../CulledMesher.js"
 import {generateChunkInfoFromFunction} from '../utils.js'
-import {Group, Vector3} from '../../node_modules/three/build/three.module.js'
-import {Object3D} from '../../node_modules/ecsy-three/build/ecsy-three.module-unpkg.js'
+import {Group, Vector3} from 'three'
+import {Object3D} from 'ecsy-three'
 
 export class VoxelLandscape extends Component {
     constructor() {
