@@ -139,9 +139,9 @@ world.createEntity()
           // make a floor between -2 and -5
           if(y < -2 && y > -5) return 1 // grass
           // make a 4x4x4 cube floating in space
-          if(    x > 0 && x < 10
-              && z > 5 && z < 20
-              && y > 5 && y < 20
+          if(    x > 0 && x < 5
+              && z > 5 && z < 10
+              && y > 5 && y < 10
           ) return 2 // brick
           return 0
       }
