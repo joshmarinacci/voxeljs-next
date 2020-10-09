@@ -25,6 +25,8 @@ export class InputFrame extends Component {
             RIGHT_STRAFE:false,
             MOVE_FORWARD:false,
             MOVE_BACKWARD:false,
+            LEVITATE_UP:false,
+            LEVITATE_DOWN:false,
         }
     }
 }
@@ -39,8 +41,11 @@ InputFrame.ROTATION_DRAGGING = 'ROTATION_DRAGGING'
 InputFrame.ROTATION_ANGLE = 'ROTATION_ANGLE'
 InputFrame.CREATE_AT_CURSOR = 'CREATE_AT_CURSOR'
 InputFrame.DESTROY_AT_CURSOR = 'DESTROY_AT_CURSOR'
+InputFrame.LEVITATE_UP = 'LEVITATE_UP'
+InputFrame.LEVITATE_DOWN = 'LEVITATE_DOWN'
 
 const Y_AXIS = new Vector3(0,1,0)
+const Z_AXIS = new Vector3(0,0,1)
 const SPEED = 0.1
 
 export class VoxelPlayerSystem extends System {
@@ -105,6 +110,26 @@ export class VoxelPlayerSystem extends System {
                     const vel = d2.multiplyScalar(4)
                     pos_trans.position.x += vel.x;
                     pos_trans.position.z += vel.z;
+                }
+                if(input.state[InputFrame.LEVITATE_DOWN] === true) {
+                    let stageRot = ent.getComponent(Parent).value
+                    let pos_trans = ent.getMutableComponent(Transform)
+                    const dir = new Vector3(0,1,0)
+                    dir.applyAxisAngle(Z_AXIS, -stageRot.getComponent(Transform).rotation.z)
+                    let d2 = dir.normalize().multiplyScalar(SPEED)
+                    const vel = d2.multiplyScalar(4)
+                    pos_trans.position.x += vel.x;
+                    pos_trans.position.y += vel.y;
+                }
+                if(input.state[InputFrame.LEVITATE_UP] === true) {
+                    let stageRot = ent.getComponent(Parent).value
+                    let pos_trans = ent.getMutableComponent(Transform)
+                    const dir = new Vector3(0,1,0)
+                    dir.applyAxisAngle(Z_AXIS, -stageRot.getComponent(Transform).rotation.z)
+                    let d2 = dir.normalize().multiplyScalar(SPEED)
+                    const vel = d2.multiplyScalar(-4)
+                    pos_trans.position.x += vel.x;
+                    pos_trans.position.y += vel.y;
                 }
             })
         })
