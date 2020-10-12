@@ -5,7 +5,7 @@ The next generation of Voxel JS.
 
 Try out a [live demo here](https://vr.josh.earth/voxeljs-next/examples/ecsy.html).  This demo shows:
 * create a flat world
-* move with keyboard ("t" and "g" to levitate)
+* move with keyboard 
 * add and remove blocks w/ mouse
 
 # What is it
