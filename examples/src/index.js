@@ -102,6 +102,8 @@ world.createEntity()
           'ArrowUp': InputFrame.MOVE_FORWARD,
           'ArrowDown': InputFrame.MOVE_BACKWARD,
           'e': InputFrame.OPEN_DASHBOARD,
+          't': InputFrame.LEVITATE_UP,
+          'g': InputFrame.LEVITATE_DOWN,
       }})
 
 
@@ -193,4 +195,3 @@ let highlight = world.createEntity()
 world.createEntity()
   .addComponent(Object3D, { value: new AmbientLight()})
   .addComponent(Parent, {value: scene})
-

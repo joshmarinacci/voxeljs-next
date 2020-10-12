@@ -4,19 +4,19 @@ The next generation of Voxel JS.
 # Play with it
 
 Try out a [live demo here](https://vr.josh.earth/voxeljs-next/examples/ecsy.html).  This demo shows:
-* create a flat world 
-* move with keyboard
+* create a flat world
+* move with keyboard 
 * add and remove blocks w/ mouse
 
 # What is it
 
 VoxelJS is a voxel engine for games, similar to Minecraft.  It provides the ability to draw voxels on the screen,
-define the landscape with a function, load up textures, and navigate around the world in desktop mode and VR, 
-and place/remove blocks.  VoxelJS uses the voxel code from the [original Voxel.js project](http://www.voxeljs.com/), updated to the latest 
+define the landscape with a function, load up textures, and navigate around the world in desktop mode and VR,
+and place/remove blocks.  VoxelJS uses the voxel code from the [original Voxel.js project](http://www.voxeljs.com/), updated to the latest
 ThreeJS, adds WebXR support, and uses the new entity component system [ECSY](https://ecsy.io/);
 
 
-Notably VoxelJS does *not* provide any sort of server component, multi-player support, or scripting. To create 
+Notably VoxelJS does *not* provide any sort of server component, multi-player support, or scripting. To create
 interactive effects like a TNT block you would need to write that code yourself (examples coming soon)..
 
 # How to use it
@@ -32,18 +32,18 @@ open http://localhost:8080
 # old stuff
 
 
-This project updates the original [voxeljs](https://voxeljs.com/) with modern Javascript (classes, ES6 modules, arrow 
+This project updates the original [voxeljs](https://voxeljs.com/) with modern Javascript (classes, ES6 modules, arrow
 functions, etc), and brings it in line with the latest [ThreeJS](https://threejs.org/), with support for the latest
 WebGL features, and also adds VR/AR support.  
 
-Because of these improvements, *voxeljs-next is not compatible with the original VoxelJS modules*. All old modules and 
-features will need to be ported to the new code. 
+Because of these improvements, *voxeljs-next is not compatible with the original VoxelJS modules*. All old modules and
+features will need to be ported to the new code.
 
 # Dependencies
 
 VoxelJS is built on [ThreeJS](https://threejs.org/) and the WebGL & WebXR standards.
-With the right options enabled it will run on desktop in embedded mode, full screen 
-with pointer lock, on a touch screen (phone, tablet), and in any VR headsets with a 
+With the right options enabled it will run on desktop in embedded mode, full screen
+with pointer lock, on a touch screen (phone, tablet), and in any VR headsets with a
 browser.
 
 
@@ -93,9 +93,9 @@ app.chunkManager = new ChunkManager({
 ## entities
 
 Voxel only tracks movementt of the player. To add other autonomus entityes like enemies and
-friendlies create a new ThreeJS group for tthem in your scene then add the ThreeJS 
+friendlies create a new ThreeJS group for tthem in your scene then add the ThreeJS
 objects. To make the entity interact with blocks and other objects you'll need to use
-a `PhysHandler`. See the pig example for details 
+a `PhysHandler`. See the pig example for details
 
 
 ## Networking
@@ -119,8 +119,8 @@ that need implementing including
 * better example of networked play
 * more demos
 * alternative rending. smaller cubes, cool textures, weird effects
-* Fix full screen in iOS and Mac safari 
-* Touch screen dragging 
+* Fix full screen in iOS and Mac safari
+* Touch screen dragging
 * Can’t choose block type in iPad
 * implement water: [How Water Works In DwarfCorp](https://www.gamasutra.com/blogs/MattKlingensmith/20130811/198050/How_Water_Works_In_DwarfCorp.php)
 * API to set multiple blocks at once. Batches help network as well.
@@ -134,5 +134,3 @@ These particular issues are newbie friendly.
 
 * explain how meshing and chunking works. the core algorithm
 * explain how rendering works. esp texture mapping.
-
-
